@@ -282,4 +282,27 @@ public class LinkedList {
 		}
 		return true;
 	}
+	Node deleteK(Node head, int k) {
+		if(head == null || k<=0) {
+			return head;
+		}
+		Node c = head;
+		Node p = null;
+		int i = 0;
+		while(c != null) {
+			i++;
+			if(i%k == 0) {
+				if(p == null) {
+					head = head.next;
+				}else {
+					
+					p.next = c.next;
+				}
+			}else{
+				p = c;
+			}
+			c = c.next;
+		}
+		return head;
+	}
 }
