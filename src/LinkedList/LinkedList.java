@@ -96,7 +96,16 @@ public class LinkedList {
 		}
 		return p;
 	}
-	
+	public Node reverseR(Node head) {
+		if(head == null || head.next == null) {
+			return head;
+		}
+		Node h = reverseR(head.next);
+		Node s = head.next;
+		s.next = head;
+		head.next = null;
+		return h;
+	}
 	
 	
 
