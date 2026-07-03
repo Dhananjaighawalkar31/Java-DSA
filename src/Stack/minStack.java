@@ -25,7 +25,13 @@ public class minStack {
     	}
     	size--;
     	
-		return a.pop();
+    	int x = a.pop();
+
+    	if (x == min.peek()) {
+    	    min.pop();
+    	}
+
+    	return x;
     }
 
     public int peek() throws Exception {
@@ -35,12 +41,13 @@ public class minStack {
     	return a.peek();
     }
 
-    public int getMin() {
-    	if(min.isEmpty()) {
-    		return -1;
-    	}
-    	int k = min.pop();
-    	return k;
+    public int getMin() throws Exception {
+
+        if(min.isEmpty()) {
+            throw new Exception("Stack is Empty");
+        }
+
+        return min.peek();
     }
 
     public boolean isEmpty() {
@@ -53,7 +60,7 @@ public class minStack {
     public int size() {
     	return size;
     }
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception {
 		minStack a = new minStack();
 		a.push(0);
 		a.push(5);
