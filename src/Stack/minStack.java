@@ -24,6 +24,7 @@ public class minStack {
     		throw new Exception("Stack is empty");
     	}
     	size--;
+    	
 		return a.pop();
     }
 
