@@ -29,7 +29,7 @@ public class NextGreaterElemetOnRight {
 	}
 	
 	public static void main(String[] args) {
-	    int[] a = {4,5,2,25};
+	    int[] a = {4,12,5,6,9,8,1,3};
 
 	    int[] ans = nextGreaterElement(a);
 
