@@ -7,10 +7,11 @@ class Node {
 
     Node(int data){
         this.data = data;
+       
     }
 }
 
-class BinaryTree {
+class Tree {
 
     public static void main(String[] args) {
 
@@ -23,5 +24,16 @@ class BinaryTree {
         root.left.right = new Node(5);
 
         root.right.left = new Node(6);
+        preOrder(root);
     }
+
+	private static void preOrder(Node root) {
+		if(root == null) {
+			return;
+		}
+		System.out.println(root.data);
+		preOrder(root.left);
+		preOrder(root.right);
+		
+	}
 }
