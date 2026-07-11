@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.Stack;
 
 class Node {
 
@@ -33,10 +34,49 @@ class Tree {
 //        preOrder(root);
 //        postOrder(root);
 //        inOrder(root);
-        levelWiseTraversal(root);
+//        levelWiseTraversal(root);
+//        iterativePreOrder(root);
+        iterativeInOrder(root);
     }
 
-    private static List<List<Integer>> levelWiseTraversal(Node root) {
+    private static List<Integer> iterativeInOrder(Node root) {
+		List<Integer> al = new ArrayList<>();
+		Stack<Node> st = new Stack<>();
+		Node node = root;
+		while(true) {
+			if(node != null) {
+				st.push(node);
+				node = node.left;
+			}else {
+				if(st.isEmpty()) {
+					break;
+				}
+				node = st.pop();
+				al.add(node.data);
+				node = node.right;
+			}
+		}
+		return al;
+		
+	}
+
+	private static void iterativePreOrder(Node root) {
+		Stack<Node> st = new Stack<>();
+		st.push(root);
+		while(!st.isEmpty()) {
+			Node curr = st.pop();
+			System.out.print(curr.data);
+			if(curr.right != null) {
+				st.push(curr.right);
+			}
+			if(curr.left != null) {
+				st.push(curr.left);
+			}
+		}
+		
+	}
+
+	private static List<List<Integer>> levelWiseTraversal(Node root) {
 
         List<List<Integer>> res = new ArrayList<>();
 
@@ -74,25 +114,25 @@ class Tree {
         return res;
     }
 
-//	private static void inOrder(Node root) {
-//		if(root == null) {
-//			return;
-//		}
-//		inOrder(root.left);
-//		System.out.println(root.data);
-//		inOrder(root.right);
-//		
-//	}
+	private static void inOrder(Node root) {
+		if(root == null) {
+			return;
+		}
+		inOrder(root.left);
+		System.out.println(root.data);
+		inOrder(root.right);
+		
+	}
 
-//	private static void postOrder(Node root) {
-//		if(root == null) {
-//			return;
-//		}
-//  postOrder(root.left);
-//		postOrder(root.right);
-//		System.out.println(root.data);
-//		
-//	}
+	private static void postOrder(Node root) {
+		if(root == null) {
+			return;
+		}
+		postOrder(root.left);
+		postOrder(root.right);
+		System.out.println(root.data);
+		
+	}
 
 	private static void preOrder(Node root) {
 		if(root == null) {
