@@ -36,10 +36,37 @@ class Tree {
 //        inOrder(root);
 //        levelWiseTraversal(root);
 //        iterativePreOrder(root);
-        iterativeInOrder(root);
+//        iterativeInOrder(root);
+        iterativePostOrder(root);
     }
 
-    private static List<Integer> iterativeInOrder(Node root) {
+    private static List<Integer> iterativePostOrder(Node root) {
+		List<Integer> al = new ArrayList<Integer>();
+		if(root == null) {
+			return al;
+		}
+		Stack<Node> st1 = new Stack<>();
+		Stack<Node> st2 = new Stack<>();
+		st1.push(root);
+		Node x = root;
+		while(!st1.isEmpty()) {
+			x = st1.pop();
+			st2.push(x);
+			if(x.left != null) {
+				st1.push(x.left);
+			}
+			if(x.right != null) {
+				st1.push(x.right);
+			}
+		}
+		while(!st2.isEmpty()) {
+			Node k = st2.pop();
+			al.add(k.data);
+		}
+		return al;
+	}
+
+	private static List<Integer> iterativeInOrder(Node root) {
 		List<Integer> al = new ArrayList<>();
 		Stack<Node> st = new Stack<>();
 		Node node = root;
