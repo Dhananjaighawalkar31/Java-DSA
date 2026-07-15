@@ -37,10 +37,21 @@ class Tree {
 //        levelWiseTraversal(root);
 //        iterativePreOrder(root);
 //        iterativeInOrder(root);
-        iterativePostOrder(root);
+//        iterativePostOrder(root);
+        maxDepth(root);
     }
 
-    private static List<Integer> iterativePostOrder(Node root) {
+    private static int maxDepth(Node root) {
+		if(root == null) {
+			return 0;
+		}
+		int a = maxDepth(root.left);
+		int b = maxDepth(root.right);
+		return 1+Math.max(a, b);
+		
+	}
+
+	private static List<Integer> iterativePostOrder(Node root) {
 		List<Integer> al = new ArrayList<Integer>();
 		if(root == null) {
 			return al;
