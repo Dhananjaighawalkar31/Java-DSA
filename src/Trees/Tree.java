@@ -39,9 +39,35 @@ class Tree {
 //        iterativeInOrder(root);
 //        iterativePostOrder(root);
         maxDepth(root);
+        minDepth(root);
     }
 
-    private static int maxDepth(Node root) {
+    private static int minDepth(Node root) {
+    	if(root == null) {
+    		return 0;
+    	}
+		if(root.right == null && root.left == null) {
+			return 1;
+		}
+		int l = 0;
+		int r = 0;
+		if(root.left != null) {
+			l = minDepth(root.left);
+		}
+		if(root.right != null) {
+			r = minDepth(root.right);
+		}
+		if(l>0 && r >0) {
+			return 1 + Math.min(l, r);
+		}
+		if(l>0 && r==0) {
+			return 1 + l;
+		}
+		return 1+r;
+		
+	}
+
+	private static int maxDepth(Node root) {
 		if(root == null) {
 			return 0;
 		}
