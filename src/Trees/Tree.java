@@ -38,11 +38,22 @@ class Tree {
 //        iterativePreOrder(root);
 //        iterativeInOrder(root);
 //        iterativePostOrder(root);
-        maxDepth(root);
-        minDepth(root);
+//        maxDepth(root);
+//        minDepth(root);
+        countNodes(root);
     }
 
-    private static int minDepth(Node root) {
+    private static int countNodes(Node root) {
+    	if(root==null) {
+    		return 0;
+    	}
+		int left = countNodes(root.left);
+		int right = countNodes(root.right);
+		return 1+ left + right;
+		
+	}
+
+	private static int minDepth(Node root) {
     	if(root == null) {
     		return 0;
     	}
