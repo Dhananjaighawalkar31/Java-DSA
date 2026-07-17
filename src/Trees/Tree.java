@@ -41,6 +41,7 @@ class Tree {
 //        maxDepth(root);
 //        minDepth(root);
         countNodes(root);
+        
     }
 
     private static int countNodes(Node root) {
@@ -52,6 +53,15 @@ class Tree {
 		return 1+ left + right;
 		
 	}
+    public boolean isSameTree(Node p, Node q) {
+        if(p == null && q == null){
+            return true;
+        }
+        if(p == null || q == null || p.data != q.data){
+            return false;
+        }
+        return isSameTree(p.left,q.left) && isSameTree(p.right,q.right);
+    }
 
 	private static int minDepth(Node root) {
     	if(root == null) {
