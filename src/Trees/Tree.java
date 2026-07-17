@@ -40,11 +40,27 @@ class Tree {
 //        iterativePostOrder(root);
 //        maxDepth(root);
 //        minDepth(root);
-        countNodes(root);
+//        countNodes(root);
+        invertTree(root);
         
     }
 
-    private static int countNodes(Node root) {
+    private static Node invertTree(Node root) {
+		
+    	if(root == null) {
+    		return null;
+    	}
+    	
+    	invertTree(root.left);
+    	invertTree(root.right);
+    	Node dummy = root.left;
+    	root.left = root.right;
+    	root.right = dummy;
+    	return root;
+		
+	}
+
+	private static int countNodes(Node root) {
     	if(root==null) {
     		return 0;
     	}
