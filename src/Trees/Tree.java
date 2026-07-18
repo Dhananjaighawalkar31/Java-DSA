@@ -41,11 +41,23 @@ class Tree {
 //        maxDepth(root);
 //        minDepth(root);
 //        countNodes(root);
-        invertTree(root);
-        
+//        invertTree(root);
+        hasPathSum(root,5);
     }
 
-    private static Node invertTree(Node root) {
+    private static boolean hasPathSum(Node root, int targetSum) {
+		if(root.left == null && root.right == null && targetSum - root.data == 0) {
+			return true;
+		}
+		if(root.left == null && root.right == null) {
+			return false;
+		}
+		targetSum = targetSum-root.data;
+		return hasPathSum(root.left,targetSum) || hasPathSum(root.right,targetSum);
+		
+	}
+
+	private static Node invertTree(Node root) {
 		
     	if(root == null) {
     		return null;
