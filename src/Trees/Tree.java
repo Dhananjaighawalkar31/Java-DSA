@@ -19,7 +19,7 @@ class Node {
 }
 
 class Tree {
-
+    int max = 0;
     public static void main(String[] args) {
 
         Node root = new Node(1);
@@ -42,10 +42,23 @@ class Tree {
 //        minDepth(root);
 //        countNodes(root);
 //        invertTree(root);
-        hasPathSum(root,5);
+//        hasPathSum(root,5);
+        Tree t = new Tree();
+        t.diameterOfTree(root);
+        System.out.println(t.max);
     }
 
-    private static boolean hasPathSum(Node root, int targetSum) {
+    private  int diameterOfTree(Node root) {
+		if(root == null) {
+			return 0;
+		}
+		int lh = diameterOfTree(root.left);
+		int rh = diameterOfTree(root.right);
+		max = Math.max(max,lh+rh);
+		return 1 + Math.max(lh,rh);
+	}
+
+	private static boolean hasPathSum(Node root, int targetSum) {
 		if(root.left == null && root.right == null && targetSum - root.data == 0) {
 			return true;
 		}
