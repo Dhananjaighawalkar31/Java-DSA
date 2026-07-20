@@ -43,12 +43,40 @@ class Tree {
 //        countNodes(root);
 //        invertTree(root);
 //        hasPathSum(root,5);
-        Tree t = new Tree();
-        t.diameterOfTree(root);
-        System.out.println(t.max);
+//        Tree t = new Tree();
+//        t.diameterOfTree(root);
+//        System.out.println(t.max);
+        isBalanced(root);
     }
 
-    private  int diameterOfTree(Node root) {
+    private static boolean isBalanced(Node root) {
+		if(helper(root) == -1) {
+			return false;
+		}
+		return true;
+		
+	}
+
+	private static int helper(Node root) {
+		if(root == null) {
+			return 0;
+		}
+		int lh = helper(root.left);
+		if(lh == -1) {
+			return -1;
+		}
+		int rh = helper(root.right);
+		if(rh == -1) {
+			return -1;
+		}
+		int diff = Math.abs(lh-rh);
+		if(diff > 1) {
+			return -1;
+		}
+		return 1 + Math.max(lh, rh);
+	}
+
+	private  int diameterOfTree(Node root) {
 		if(root == null) {
 			return 0;
 		}
