@@ -46,10 +46,39 @@ class Tree {
 //        Tree t = new Tree();
 //        t.diameterOfTree(root);
 //        System.out.println(t.max);
-        isBalanced(root);
+//        isBalanced(root);
+        BinaryTreePath(root);
+    }
+    private static List<String> BinaryTreePath(Node root) {
+        List<String> al = new ArrayList<>();
+
+        if(root == null) {
+            return al;
+        }
+
+        String path = root.data + "";
+        helper(root, al, path);
+        return al;
     }
 
-    private static boolean isBalanced(Node root) {
+	private static void helper(Node root, List<String> al, String path) {
+		if(root == null) {
+			return;
+		}
+		if(root.left == null && root.right == null) {
+			al.add(path);
+			return;
+		}
+		if(root.left != null) {
+			helper(root.left,al,path +"->" + root.left.data);
+		}
+		if(root.right != null) {
+			helper(root.right,al,path +"->" + root.right.data);
+		}
+		
+	}
+
+	private static boolean isBalanced(Node root) {
 		if(helper(root) == -1) {
 			return false;
 		}
