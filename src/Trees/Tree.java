@@ -31,6 +31,7 @@ class Tree {
         root.left.right = new Node(5);
 
         root.right.left = new Node(6);
+        Tree t = new Tree();
 //        preOrder(root);
 //        postOrder(root);
 //        inOrder(root);
@@ -47,9 +48,33 @@ class Tree {
 //        t.diameterOfTree(root);
 //        System.out.println(t.max);
 //        isBalanced(root);
-        BinaryTreePath(root);
+//        BinaryTreePath(root);
+        t.maxPathSum(root);
     }
-    private static List<String> BinaryTreePath(Node root) {
+    int maxi = 0;
+    private int maxPathSum(Node root) {
+		maxi = root.data;
+		helpermaxPathSum(root);
+		return maxi;
+	}
+    
+	private int helpermaxPathSum(Node root) {
+		if(root == null) {
+			return 0;
+		}
+		int lh = helpermaxPathSum(root.left);
+		int rh = helpermaxPathSum(root.right);
+		if(lh<0) {
+			lh = 0;
+		}
+		if(rh < 0) {
+			rh = 0;
+		}
+		maxi = Math.max(maxi,root.data + lh + rh);
+		return root.data + Math.max(lh, rh);
+	}
+
+	private static List<String> BinaryTreePath(Node root) {
         List<String> al = new ArrayList<>();
 
         if(root == null) {
