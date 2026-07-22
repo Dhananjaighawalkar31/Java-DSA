@@ -52,9 +52,74 @@ class Tree {
 //        isBalanced(root);
 //        BinaryTreePath(root);
 //        t.maxPathSum(root);
-        zigzagLevelOrder(root);
+//        zigzagLevelOrder(root);
+        boundaryTraversalInAntiClockWise(root);
     }
-    private static List<List<Integer>> zigzagLevelOrder(Node root) {
+    private static List<Integer> boundaryTraversalInAntiClockWise(Node root) {
+		if(root == null) {
+			return null;
+		}
+		List<Integer> al = new ArrayList<>();
+		al.add(root.data);
+		if(root.left != null) {
+			getLeft(root.left,al);
+		}
+		getLeaf(root,al);
+		if(root.right != null) {
+			getRight(root,al);
+		}
+		return al;
+		
+	}
+    
+	private static void getRight(Node root, List<Integer> al) {
+		Stack<Integer> st = new Stack<>();
+		Node curr = root;
+		while(!isLeaf(curr)) {
+			if(curr.right != null) {
+				st.push(curr.data);
+				curr = curr.right;
+			}else {
+				st.push(curr.data);
+				curr = curr.left;
+			}
+		}
+		while(!st.isEmpty()) {
+			al.add(st.pop());
+		}
+		
+	}
+	private static void getLeaf(Node root, List<Integer> al) {
+		if(root == null) {
+			return;
+		}
+		getLeaf(root.left,al);
+		if(isLeaf(root)) {
+			al.add(root.data);
+		}
+		getLeaf(root.right,al);
+		
+	}
+	private static void getLeft(Node root, List<Integer> al) {
+		Node curr = root;
+		while(!isLeaf(curr)) {
+			if(curr.left != null) {
+				al.add(curr.data);
+				curr = curr.left;
+			}else {
+				al.add(curr.data);
+				curr = curr.right;
+			}
+		}
+		
+	}
+	private static boolean isLeaf(Node root) {
+		if(root.left == null && root.right == null) {
+			return true;
+		}
+		return false;
+	}
+	private static List<List<Integer>> zigzagLevelOrder(Node root) {
     	List<List<Integer>> res = new ArrayList<>();
     	if(root == null) {
     		return res;
