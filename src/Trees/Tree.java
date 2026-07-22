@@ -1,6 +1,8 @@
 package Trees;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -49,9 +51,42 @@ class Tree {
 //        System.out.println(t.max);
 //        isBalanced(root);
 //        BinaryTreePath(root);
-        t.maxPathSum(root);
+//        t.maxPathSum(root);
+        zigzagLevelOrder(root);
     }
-    int maxi = 0;
+    private static List<List<Integer>> zigzagLevelOrder(Node root) {
+    	List<List<Integer>> res = new ArrayList<>();
+    	if(root == null) {
+    		return res;
+    	}
+    	Queue<Node> q = new ArrayDeque<>();
+    	q.offer(root);
+    	boolean b = true;
+    	while(!q.isEmpty()) {
+    		int n = q.size();
+    		List<Integer> al = new ArrayList<>(); 
+    		for(int i = 0;i<n;i++) {
+    			Node t = q.poll();
+    			if(t.left != null) {
+    				q.offer(t.left);
+    			}
+    			if(t.right != null) {
+    				q.offer(t.right);
+    			}
+    			al.add(t.data);
+    		}
+    		if(b) {
+    			res.add(al);
+    		}else {
+    			Collections.reverse(al);
+    			res.add(al);
+    		}
+    		b = !b;
+    	}
+    	return res;
+		
+	}
+	int maxi = 0;
     private int maxPathSum(Node root) {
 		maxi = root.data;
 		helpermaxPathSum(root);
