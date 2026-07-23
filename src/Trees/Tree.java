@@ -33,10 +33,10 @@ class Tuple {
 		this.row = row;
 	}
 }
-class topViewDS{
+class NodeWithLine {
 	Node node;
 	int line;
-	public topViewDS(Node node,	int line) {
+	public NodeWithLine (Node node,	int line) {
 		this.node = node;
 		this.line = line;
 	}
@@ -81,7 +81,39 @@ class Tree {
 //		for (List<Integer> list : ans) {
 //			System.out.println(list);
 //		}
-		topViewOfBinaryTree(root);
+//		topViewOfBinaryTree(root);
+		bottomViewOfBinaryTree(root);
+	}
+
+	private static List<Integer> bottomViewOfBinaryTree(Node root) {
+		List<Integer> al = new ArrayList<>();
+		if(root == null) {
+			return al;
+		}
+		Queue<NodeWithLine > q = new LinkedList<>();
+		TreeMap<Integer,Node> map = new TreeMap<>();
+		q.offer(new NodeWithLine (root,0));
+		while(!q.isEmpty()) {
+			NodeWithLine  tv = q.poll();
+			Node node = tv.node;
+			int line = tv.line;
+//			map.putIfAbsent(line, node);
+//			if(!map.containsKey(line)) {
+//				map.put(line, node);
+//			}else {
+				map.put(line, node);
+//			}
+			if(node.left != null) {
+				q.offer(new NodeWithLine (node.left,line-1));
+			}
+			if(node.right != null) {
+				q.offer(new NodeWithLine (node.right,line+1));
+			}
+		}
+		for(Node rows : map.values()) {
+			al.add(rows.data);
+		}
+		return al;
 	}
 
 	private static List<Integer> topViewOfBinaryTree(Node root) {
@@ -90,21 +122,21 @@ class Tree {
 			return al;
 		}
 		TreeMap<Integer,Node> map = new TreeMap<>();
-		Queue<topViewDS> q = new LinkedList<>();
-		topViewDS tv = new topViewDS(root,0);
+		Queue<NodeWithLine > q = new LinkedList<>();
+		NodeWithLine  tv = new NodeWithLine (root,0);
 		q.offer(tv);
 		while(!q.isEmpty()) {
-			topViewDS dummy = q.poll();
+			NodeWithLine  dummy = q.poll();
 			int line = dummy.line;
 			Node node = dummy.node;
 			if(!map.containsKey(line)) {  //map.putIfAbsent(line, node);
 				map.put(line, node);
 			}
 			if(node.left != null) {
-				q.offer(new topViewDS(node.left,line-1));
+				q.offer(new NodeWithLine (node.left,line-1));
 			}
 			if(node.right != null) {
-				q.offer(new topViewDS(node.right,line+1));
+				q.offer(new NodeWithLine (node.right,line+1));
 			}
 		}
 		for(Node rows : map.values()) {
