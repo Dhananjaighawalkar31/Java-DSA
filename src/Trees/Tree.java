@@ -23,15 +23,23 @@ class Node {
 }
 
 class Tuple {
-    Node node;
-    int column;
-    int row;
+	Node node;
+	int column;
+	int row;
 
-    public Tuple(Node node, int column, int row) {
-        this.node = node;
-        this.column = column;
-        this.row = row;
-    }
+	public Tuple(Node node, int column, int row) {
+		this.node = node;
+		this.column = column;
+		this.row = row;
+	}
+}
+class topViewDS{
+	Node node;
+	int line;
+	public topViewDS(Node node,	int line) {
+		this.node = node;
+		this.line = line;
+	}
 }
 
 class Tree {
@@ -68,75 +76,106 @@ class Tree {
 //        BinaryTreePath(root);
 //        t.maxPathSum(root);
 //        zigzagLevelOrder(root);
-		List<List<Integer>> ans = t.verticalTraversal(root);
+//		List<List<Integer>> ans = t.verticalTraversal(root);
+//
+//		for (List<Integer> list : ans) {
+//			System.out.println(list);
+//		}
+		topViewOfBinaryTree(root);
+	}
 
-		for (List<Integer> list : ans) {
-		    System.out.println(list);
+	private static List<Integer> topViewOfBinaryTree(Node root) {
+		List<Integer> al = new ArrayList<>();
+		if(root == null) {
+			return al;
 		}
+		TreeMap<Integer,Node> map = new TreeMap<>();
+		Queue<topViewDS> q = new LinkedList<>();
+		topViewDS tv = new topViewDS(root,0);
+		q.offer(tv);
+		while(!q.isEmpty()) {
+			topViewDS dummy = q.poll();
+			int line = dummy.line;
+			Node node = dummy.node;
+			if(!map.containsKey(line)) {  //map.putIfAbsent(line, node);
+				map.put(line, node);
+			}
+			if(node.left != null) {
+				q.offer(new topViewDS(node.left,line-1));
+			}
+			if(node.right != null) {
+				q.offer(new topViewDS(node.right,line+1));
+			}
+		}
+		for(Node rows : map.values()) {
+			al.add(rows.data);
+		}
+		return al;
+		
 	}
 
 	public List<List<Integer>> verticalTraversal(Node root) {
 
-	    List<List<Integer>> ans = new ArrayList<>();
+		List<List<Integer>> ans = new ArrayList<>();
 
-	    if (root == null)
-	        return ans;
+		if (root == null)
+			return ans;
 
-	    TreeMap<Integer, TreeMap<Integer, PriorityQueue<Integer>>> map = new TreeMap<>();
+		TreeMap<Integer, TreeMap<Integer, PriorityQueue<Integer>>> map = new TreeMap<>();
 
-	    Queue<Tuple> q = new LinkedList<>();
+		Queue<Tuple> q = new LinkedList<>();
 
-	    // Root starts at column = 0, row = 0
-	    q.offer(new Tuple(root, 0, 0));
+		// Root starts at column = 0, row = 0
+		q.offer(new Tuple(root, 0, 0));
 
-	    while (!q.isEmpty()) {
+		while (!q.isEmpty()) {
 
-	        Tuple tuple = q.poll();
+			Tuple tuple = q.poll();
 
-	        Node node = tuple.node;
-	        int column = tuple.column;
-	        int row = tuple.row;
+			Node node = tuple.node;
+			int column = tuple.column;
+			int row = tuple.row;
 
-	        // Create column if it doesn't exist
-	        if (!map.containsKey(column)) {
-	            map.put(column, new TreeMap<>());
-	        }
+			// Create column if it doesn't exist
+			if (!map.containsKey(column)) {
+				map.put(column, new TreeMap<>());
+			}
 
-	        // Create row inside that column if it doesn't exist
-	        if (!map.get(column).containsKey(row)) {
-	            map.get(column).put(row, new PriorityQueue<>());
-	        }
+			// Create row inside that column if it doesn't exist
+			if (!map.get(column).containsKey(row)) {
+				map.get(column).put(row, new PriorityQueue<>());
+			}
 
-	        // Store node value
-	        map.get(column).get(row).offer(node.data);
+			// Store node value
+			map.get(column).get(row).offer(node.data);
 
-	        // Left child
-	        if (node.left != null) {
-	            q.offer(new Tuple(node.left, column - 1, row + 1));
-	        }
+			// Left child
+			if (node.left != null) {
+				q.offer(new Tuple(node.left, column - 1, row + 1));
+			}
 
-	        // Right child
-	        if (node.right != null) {
-	            q.offer(new Tuple(node.right, column + 1, row + 1));
-	        }
-	    }
+			// Right child
+			if (node.right != null) {
+				q.offer(new Tuple(node.right, column + 1, row + 1));
+			}
+		}
 
-	    // Read values from TreeMap
-	    for (TreeMap<Integer, PriorityQueue<Integer>> rows : map.values()) {
+		// Read values from TreeMap
+		for (TreeMap<Integer, PriorityQueue<Integer>> rows : map.values()) {
 
-	        List<Integer> list = new ArrayList<>();
+			List<Integer> list = new ArrayList<>();
 
-	        for (PriorityQueue<Integer> pq : rows.values()) {
+			for (PriorityQueue<Integer> pq : rows.values()) {
 
-	            while (!pq.isEmpty()) {
-	                list.add(pq.poll());
-	            }
-	        }
+				while (!pq.isEmpty()) {
+					list.add(pq.poll());
+				}
+			}
 
-	        ans.add(list);
-	    }
+			ans.add(list);
+		}
 
-	    return ans;
+		return ans;
 	}
 
 	private static List<Integer> boundaryTraversalInAntiClockWise(Node root) {
