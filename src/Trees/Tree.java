@@ -31,7 +31,7 @@ class Tuple {
 		this.node = node;
 		this.column = column;
 		this.row = row;
-	}
+	} 
 }
 class NodeWithLine {
 	Node node;
@@ -82,7 +82,57 @@ class Tree {
 //			System.out.println(list);
 //		}
 //		topViewOfBinaryTree(root);
-		bottomViewOfBinaryTree(root);
+//		bottomViewOfBinaryTree(root);
+		rightViewOfBinaryTree(root);
+		leftViewOfBInaryTree(root);
+	}
+
+	private static List<Integer> leftViewOfBInaryTree(Node root) {
+		List<Integer> al = new ArrayList<>();
+		if(root == null) {
+			return al;
+		}
+		leftViewHelper(root,al,0);
+		return al;
+		
+	}
+
+	private static void leftViewHelper(Node root, List<Integer> al, int i) {
+		if(root == null) {
+			return;
+		}
+		if(al.size() == i) {
+			al.add(root.data);
+		}
+		leftViewHelper(root.left,al,i+1);
+		leftViewHelper(root.right,al,i+1);
+		
+		
+		
+	}
+
+	private static List<Integer> rightViewOfBinaryTree(Node root) {
+		List<Integer> al = new ArrayList<>();
+		if(root == null) {
+			return al;
+		}
+		rightViewHelper(root,al,0);
+		return al;
+		
+	}
+
+	private static void rightViewHelper(Node root, List<Integer> al,int k) {
+		if(root == null) {
+			return;
+		}
+		if(al.size() == k) {
+			al.add(root.data);
+		}
+		
+		rightViewHelper(root.right,al,k+1);
+		rightViewHelper(root.left,al,k+1);
+
+		
 	}
 
 	private static List<Integer> bottomViewOfBinaryTree(Node root) {
