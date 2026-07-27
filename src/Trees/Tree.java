@@ -85,12 +85,50 @@ class Tree {
 //		bottomViewOfBinaryTree(root);
 //		rightViewOfBinaryTree(root);
 //		leftViewOfBInaryTree(root);
-		isSymmetric(root);
+//		isSymmetric(root);
+//		rootToNodePath(root,7);
+		lowestCommonAncestors(root,2,3);
+	}
+
+	private static Node lowestCommonAncestors(Node root, int x, int y) {
+		if(root == null || root.data == x || root.data == y) {
+			return root;
+		}
+		Node left = lowestCommonAncestors(root.left,x,y);
+		Node right = lowestCommonAncestors(root.right,x,y);
+		if(left == null) {
+			return right;
+		}else if(right == null) {
+			return left;
+		}
+		return root;
+	}
+
+	private static List<Integer> rootToNodePath(Node root,int k) {
+		List<Integer> al = new ArrayList<>();
+		helper(al,root,k);
+		return al;
+		
+	}
+
+	private static boolean helper(List<Integer> al, Node root, int k) {
+		if(root == null) {
+			return false;
+		}
+		al.add(root.data);
+		if(root.data == k) {
+			return true;
+		}
+		if(helper(al,root.left,k) || helper(al,root.right,k)) {
+			return true;
+		}
+		
+		al.remove(al.size()-1);
+		return false;
 	}
 
 	private static boolean isSymmetric(Node root) {
 		return helperSymmetric(root.left,root.right);
-		
 	}
 
 	private static boolean helperSymmetric(Node n1, Node n2) {
