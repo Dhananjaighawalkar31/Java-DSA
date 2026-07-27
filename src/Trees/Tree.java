@@ -83,8 +83,24 @@ class Tree {
 //		}
 //		topViewOfBinaryTree(root);
 //		bottomViewOfBinaryTree(root);
-		rightViewOfBinaryTree(root);
-		leftViewOfBInaryTree(root);
+//		rightViewOfBinaryTree(root);
+//		leftViewOfBInaryTree(root);
+		isSymmetric(root);
+	}
+
+	private static boolean isSymmetric(Node root) {
+		return helperSymmetric(root.left,root.right);
+		
+	}
+
+	private static boolean helperSymmetric(Node n1, Node n2) {
+		if(n1 == null && n2 == null) {
+			return true;
+		}
+		if(n1 == null || n2 == null) {
+			return false;
+		}
+		return (n1.data == n2.data) && helperSymmetric(n1.left,n2.right) && helperSymmetric(n1.right,n2.left);
 	}
 
 	private static List<Integer> leftViewOfBInaryTree(Node root) {
