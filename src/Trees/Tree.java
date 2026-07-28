@@ -596,6 +596,43 @@ class Tree {
 		return 1 + Math.max(a, b);
 
 	}
+	public static List<Integer> iterativePostOrderSingleStack(Node root) {
+
+	    List<Integer> result = new ArrayList<>();
+
+	    if (root == null)
+	        return result;
+
+	    Stack<Node> stack = new Stack<>();
+	    Node curr = root;
+	    Node lastVisited = null;
+
+	    while (curr != null || !stack.isEmpty()) {
+
+	        // Go to the leftmost node
+	        if (curr != null) {
+	            stack.push(curr);
+	            curr = curr.left;
+	        } else {
+
+	            Node rightChild = stack.peek().right;
+
+	            // If right subtree doesn't exist or is already processed
+	            if (rightChild == null || rightChild == lastVisited) {
+
+	                lastVisited = stack.pop();
+	                result.add(lastVisited.data);
+
+	            } else {
+
+	                // Visit the right subtree
+	                curr = rightChild;
+	            }
+	        }
+	    }
+
+	    return result;
+	}
 
 	private static List<Integer> iterativePostOrder(Node root) {
 		List<Integer> al = new ArrayList<Integer>();
