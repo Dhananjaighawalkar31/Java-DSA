@@ -41,7 +41,14 @@ class NodeWithLine {
 		this.line = line;
 	}
 }
-
+class PairForWidthOFTree{
+	Node node;
+	int index;
+	PairForWidthOFTree(Node node,int index){
+		this.node = node;
+		this.index = index;
+	}
+}
 class Tree {
 	int max = 0;
 
@@ -87,7 +94,46 @@ class Tree {
 //		leftViewOfBInaryTree(root);
 //		isSymmetric(root);
 //		rootToNodePath(root,7);
-		lowestCommonAncestors(root,2,3);
+//		lowestCommonAncestors(root,2,3);
+		MaximumWidthofBinaryTree(root);
+	}
+
+	private static int MaximumWidthofBinaryTree(Node root) {
+		if(root == null) {
+			return 0;
+		}
+		Queue<PairForWidthOFTree> q = new ArrayDeque<>();
+		q.add(new PairForWidthOFTree(root,0));
+		int maxWidth = 0;
+		while(!q.isEmpty()) {
+			int n = q.size();
+			int min = q.peek().index;
+			int first  = 0;
+			int last = 0;
+			for(int i = 0;i<n;i++) {
+				PairForWidthOFTree pair = q.poll();
+				Node node = pair.node;
+				
+				int currIndex = pair.index-min;
+				if(i == 0) {
+					first = currIndex;
+				}
+				if(i == n-1) {
+					last = currIndex;
+				}
+				if(node.left != null) {
+					q.add(new PairForWidthOFTree(node.left,2*currIndex + 1));
+				}
+				if(node.right != null) {
+					q.add(new PairForWidthOFTree(node.right,2*currIndex + 2));
+				}
+
+			}
+			maxWidth = Math.max(maxWidth, last-first+1);
+		}
+		return maxWidth;
+		
+		
 	}
 
 	private static Node lowestCommonAncestors(Node root, int x, int y) {
@@ -605,7 +651,7 @@ class Tree {
 
 	    Stack<Node> stack = new Stack<>();
 	    Node curr = root;
-	    Node lastVisited = null;
+	    Node lastVisited = null; 
 
 	    while (curr != null || !stack.isEmpty()) {
 
