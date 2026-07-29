@@ -95,8 +95,46 @@ class Tree {
 //		isSymmetric(root);
 //		rootToNodePath(root,7);
 //		lowestCommonAncestors(root,2,3);
-		MaximumWidthofBinaryTree(root);
+//		MaximumWidthofBinaryTree(root);
+		ChildrenSumProperty(root);
 	}
+
+	private static void ChildrenSumProperty(Node root) {
+		if(root == null) {
+			return;
+		}
+		int child = 0;
+		if(root.left != null) {
+			child += root.left.data;
+		}
+		if(root.right != null) {
+			child += root.right.data;
+		}
+		if(child >= root.data) {
+			root.data = child;
+		}else {
+			if(root.left != null) {
+				root.left.data = child;
+			}
+			else if(root.right != null) {
+				root.right.data = child;
+			}
+		}
+		ChildrenSumProperty(root.left);
+		ChildrenSumProperty(root.right);
+		int x = 0;
+		if(root.left != null) {
+			x+=root.left.data;
+		}
+		if(root.right != null) {
+			x+=root.right.data;
+		}
+		if(root.left != null || root.right != null) {
+			root.data = x;
+		}
+	}
+
+
 
 	private static int MaximumWidthofBinaryTree(Node root) {
 		if(root == null) {
