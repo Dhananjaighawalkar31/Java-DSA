@@ -3,8 +3,10 @@ package Trees;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Stack;
@@ -96,7 +98,32 @@ class Tree {
 //		rootToNodePath(root,7);
 //		lowestCommonAncestors(root,2,3);
 //		MaximumWidthofBinaryTree(root);
-		ChildrenSumProperty(root);
+//		ChildrenSumProperty(root);
+		distanceK(root,root,2);
+	}
+
+	private static List<Integer> distanceK(Node root, Node target, int k) {
+		Map<Node,Node> parentMap = new HashMap<>();
+		markParents(parentMap,root);
+		
+	}
+
+	private static void markParents(Map<Node, Node> parentMap, Node root) {
+		Queue<Node> q = new ArrayDeque<>();
+		q.offer(root);
+		while(!q.isEmpty()) {
+			Node node = q.poll();
+			if(node.left != null) {
+				parentMap.put(node.left, node);
+				q.offer(node.left);
+			}
+			if(node.right != null) {
+				parentMap.put(node.right, node);
+				q.offer(node.right);
+			}
+		}
+				
+		
 	}
 
 	private static void ChildrenSumProperty(Node root) {
@@ -114,10 +141,10 @@ class Tree {
 			root.data = child;
 		}else {
 			if(root.left != null) {
-				root.left.data = child;
+				root.left.data = root.data;
 			}
-			else if(root.right != null) {
-				root.right.data = child;
+			if(root.right != null) {
+				root.right.data = root.data;
 			}
 		}
 		ChildrenSumProperty(root.left);
