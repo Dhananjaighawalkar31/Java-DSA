@@ -99,13 +99,85 @@ class Tree {
 //		lowestCommonAncestors(root,2,3);
 //		MaximumWidthofBinaryTree(root);
 //		ChildrenSumProperty(root);
-		distanceK(root,root,2);
+//		distanceK(root,root,2);
+		BuringTree(root,root);
+	}
+
+	private static int BuringTree(Node root,Node target) {
+		Map<Node,Node> parentMap = new HashMap<>();
+		markParents(parentMap,root);
+		Map<Node,Boolean> visited = new HashMap<>();
+		Queue<Node> q = new ArrayDeque<>();
+		q.offer(target);
+		visited.put(target, true);
+		int time = 0;
+		while(!q.isEmpty()) {
+			int size = q.size();
+			boolean burned = false;
+			for(int i = 0;i<size;i++) {
+				Node node = q.poll();
+				if(node.left != null && visited.get(node.left) == null) {
+					q.offer(node.left);
+					visited.put(node.left,true);
+					burned = true;
+				}
+				if(node.right != null && visited.get(node.right) == null) {
+					q.offer(node.right);
+					visited.put(node.right, true);
+					burned = true;
+				}
+				Node parent = parentMap.get(node);
+				if(parent != null && visited.get(parent) == null) {
+					q.offer(parent);
+					visited.put(parent, true);
+					burned = true;
+				}
+				
+			}
+		    if(burned)
+		        time++;
+		}
+		return time;
+		
 	}
 
 	private static List<Integer> distanceK(Node root, Node target, int k) {
 		Map<Node,Node> parentMap = new HashMap<>();
 		markParents(parentMap,root);
-		
+		Map<Node,Boolean> visited = new HashMap<>();
+		Queue<Node> q = new ArrayDeque<>();
+		q.offer(target);
+		visited.put(target, true);
+		int level = 0;
+		while(!q.isEmpty()) {
+			int size = q.size();
+			if(level == k) {
+				break;
+			}
+			level++;
+			for(int i = 0;i<size;i++) {
+				Node node = q.poll();
+				if(node.left != null && visited.get(node.left) == null) {
+					q.offer(node.left);
+					visited.put(node.left, true);
+				}
+				if(node.right != null && visited.get(node.right)==null) {
+					q.offer(node.right);
+					visited.put(node.right, true);
+				}
+				Node parent = parentMap.get(node);
+				if(parent != null && visited.get(parent) == null) {
+					q.offer(parent);
+					visited.put(parent, true);
+				}
+			}
+			
+		}
+		List<Integer> ans = new ArrayList<>();
+		while(!q.isEmpty()) {
+			ans.add(q.poll().data);
+		}
+		return ans;
 	}
 
 	private static void markParents(Map<Node, Node> parentMap, Node root) {
