@@ -100,10 +100,10 @@ class Tree {
 //		MaximumWidthofBinaryTree(root);
 //		ChildrenSumProperty(root);
 //		distanceK(root,root,2);
-		BuringTree(root,root);
+		BurningTree(root,root);
 	}
 
-	private static int BuringTree(Node root,Node target) {
+	private static int BurningTree(Node root,Node target) {
 		Map<Node,Node> parentMap = new HashMap<>();
 		markParents(parentMap,root);
 		Map<Node,Boolean> visited = new HashMap<>();
