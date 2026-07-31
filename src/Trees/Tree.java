@@ -100,7 +100,40 @@ class Tree {
 //		MaximumWidthofBinaryTree(root);
 //		ChildrenSumProperty(root);
 //		distanceK(root,root,2);
-		BurningTree(root,root);
+//		BurningTree(root,root);
+		CountNodeCBT(root);
+	}
+
+	private static int CountNodeCBT(Node root) {
+		if(root == null) {
+			return 0;
+		}
+		int lh = heightLeft(root);
+		int rh = heightRight(root);
+		if(lh == rh) {
+		    return (1 << lh) - 1;
+		};
+		return 1 + CountNodeCBT(root.left) + CountNodeCBT(root.right);
+	}
+	
+	
+
+	private static int heightRight(Node node) {
+		int c = 0;
+		while(node != null) {
+			c++;
+			node = node.right;
+		}
+		return c;
+	}
+
+	private static int heightLeft(Node node) {
+		int c = 0;
+		while(node != null) {
+			c++;
+			node = node.left;
+		}
+		return c;
 	}
 
 	private static int BurningTree(Node root,Node target) {
