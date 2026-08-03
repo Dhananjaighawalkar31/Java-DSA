@@ -101,8 +101,34 @@ class Tree {
 //		ChildrenSumProperty(root);
 //		distanceK(root,root,2);
 //		BurningTree(root,root);
-		CountNodeCBT(root);
+//		CountNodeCBT(root);
+		buildTreePreOrderInorder(new int[] {},new int[] {});
 	}
+	
+
+	private static Node buildTreePreOrderInorder(int[] preorder,int[] inorder) {
+		
+		HashMap<Integer,Integer> map = new HashMap<>();
+		for(int i = 0;i<inorder.length;i++) {
+			map.put(inorder[i], i);
+		}
+		Node root = build(preorder,0,preorder.length-1,inorder,0,inorder.length-1,map);
+		return root;
+	}
+
+
+	private static Node build(int[] preorder, int preStart, int preEnd,int[] inorder, int inStart, int inEnd, HashMap<Integer, Integer> map) {
+		if(preStart > preEnd || inStart > inEnd) {
+			return null;
+		}
+		Node root = new Node(preorder[preStart]);
+		int inRoot = map.get(root.data);
+		int numsLeft = inRoot - inStart;
+		root.left = build(preorder,preStart+1,preStart+numsLeft,inorder,inStart,inRoot-1,map);
+		root.right = build(preorder,preStart+numsLeft+1,preEnd,inorder,inRoot+1,inEnd,map);
+		return root;
+	}
+
 
 	private static int CountNodeCBT(Node root) {
 		if(root == null) {
