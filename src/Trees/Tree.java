@@ -102,10 +102,31 @@ class Tree {
 //		distanceK(root,root,2);
 //		BurningTree(root,root);
 //		CountNodeCBT(root);
-		buildTreePreOrderInorder(new int[] {},new int[] {});
-		buildTreePostOrderInorder(new int[] {},new int[] {});
+//		buildTreePreOrderInorder(new int[] {},new int[] {});
+//		buildTreePostOrderInorder(new int[] {},new int[] {});
+		serialize(root);
 	}
 	
+
+	private static String serialize(Node root) {
+		Queue<Node> q = new LinkedList<>();
+		StringBuilder sb = new StringBuilder();
+		q.add(root);
+		while(!q.isEmpty()) {
+			Node node = q.poll();
+			if(node != null){
+			    sb.append(node.data+" ");
+
+			    q.add(node.left);
+			    q.add(node.right);
+			}
+			else{
+			    sb.append("n ");
+			}
+		}
+		return sb.toString();
+	}
+
 
 	private static Node buildTreePostOrderInorder(int[] postorder, int[] inorder) {
 		HashMap<Integer,Integer> map = new HashMap<>();
