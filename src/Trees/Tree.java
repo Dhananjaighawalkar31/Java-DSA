@@ -104,10 +104,36 @@ class Tree {
 //		CountNodeCBT(root);
 //		buildTreePreOrderInorder(new int[] {},new int[] {});
 //		buildTreePostOrderInorder(new int[] {},new int[] {});
-		String serialize = serialize(root);
-		deserialize(serialize);
+//		String serialize = serialize(root);
+//		deserialize(serialize);
+		morrisInorder(root);
 	}
 	
+
+	private static void morrisInorder(Node root) {
+		Node curr = root;
+		while(curr != null) {
+			if(curr.left == null) {
+				System.out.println(curr.data);
+				curr = curr.right;
+			}else {
+				Node pre = curr.left;
+				while(pre.right != null  && pre.right != curr) {
+					pre = pre.right;
+				}
+				if(pre.right == null) {
+					pre.right = curr;
+					curr = curr.left;
+				}else {
+					pre.right = null;
+					System.out.println(curr.data);
+					curr = curr.right;
+				}
+			}
+		}
+		
+	}
+
 
 	private static Node deserialize(String str) {
 		if(str.isEmpty()) {
