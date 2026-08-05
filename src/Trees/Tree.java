@@ -103,8 +103,36 @@ class Tree {
 //		BurningTree(root,root);
 //		CountNodeCBT(root);
 		buildTreePreOrderInorder(new int[] {},new int[] {});
+		buildTreePostOrderInorder(new int[] {},new int[] {});
 	}
 	
+
+	private static Node buildTreePostOrderInorder(int[] postorder, int[] inorder) {
+		HashMap<Integer,Integer> map = new HashMap<>();
+		for(int i = 0;i<inorder.length;i++) {
+			map.put(inorder[i], i);
+		}
+		Node root = buildPostOrder(postorder,0,postorder.length-1,inorder,0,inorder.length-1,map);
+		return root;
+		
+	}
+
+
+	private static Node buildPostOrder(int[] postorder, int a, int b, int[] inorder, int x, int y,
+			HashMap<Integer, Integer> map) {
+		if(a > b || x > y) {
+	        return null;
+	    }
+		Node root = new Node(postorder[b]);
+		int k = map.get(root.data);
+		int leftNums = k - x;
+
+	    root.left = buildPostOrder(postorder,a,a + leftNums - 1,inorder,x,k - 1,map);
+
+	    root.right = buildPostOrder(postorder,a + leftNums,b - 1,inorder,k + 1,y,map);
+		return root;
+	}
+
 
 	private static Node buildTreePreOrderInorder(int[] preorder,int[] inorder) {
 		
