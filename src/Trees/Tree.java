@@ -104,11 +104,41 @@ class Tree {
 //		CountNodeCBT(root);
 //		buildTreePreOrderInorder(new int[] {},new int[] {});
 //		buildTreePostOrderInorder(new int[] {},new int[] {});
-		serialize(root);
+		String serialize = serialize(root);
+		deserialize(serialize);
 	}
 	
 
+	private static Node deserialize(String str) {
+		if(str.isEmpty()) {
+			return null;
+		}
+		Queue<Node> q = new LinkedList<>();
+		String[] arr = str.trim().split(" ");
+		int k = Integer.parseInt(arr[0]);
+		Node root = new Node(k);
+		q.add(root);
+		for(int i = 1;i<arr.length;i++) {
+			Node node = q.poll();
+			if(!arr[i].equals("n")) {
+				node.left = new Node(Integer.parseInt(arr[i]));
+				q.add(node.left);
+			}
+			if(++i < arr.length && !arr[i].equals("n")) {
+				node.right = new Node(Integer.parseInt(arr[i]));
+				q.add(node.right);
+				
+			}
+
+		}
+		return root;
+	}
+
+
 	private static String serialize(Node root) {
+		if(root == null) {
+			return "";
+		}
 		Queue<Node> q = new LinkedList<>();
 		StringBuilder sb = new StringBuilder();
 		q.add(root);
