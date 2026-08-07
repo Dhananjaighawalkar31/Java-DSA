@@ -108,10 +108,30 @@ class Tree {
 //		deserialize(serialize);
 //		morrisInorder(root);
 //		FlattenTree(root);
-		t.FlattenTreeReversePreOrder(root);
-		
+//		t.FlattenTreeReversePreOrder(root);
+		FlattenTreeIterative(root);
 	}
 	
+
+	private static void FlattenTreeIterative(Node root) {
+		Stack<Node> st = new Stack<>();
+		st.push(root);
+		while(!st.isEmpty()) {
+			Node curr = st.pop();
+			if(curr.right != null) {
+				st.push(curr.right);
+			}
+			if(curr.left != null) {
+				st.push(curr.left);
+			}
+			if(!st.isEmpty()) {
+				curr.right = st.peek();
+			}
+			curr.left = null;
+		}
+		
+	}
+
 
 	Node prev = null;
 	private  void FlattenTreeReversePreOrder(Node root) {
