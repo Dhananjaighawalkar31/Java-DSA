@@ -114,10 +114,29 @@ class Tree {
 		
 //		SearchBinarySearchTree(root,10);
 //		SearchBSTiterative(root,20);
-
+//		CeilBST(root,10);
 		
 	}
 	
+	
+
+
+
+	private static int CeilBST(Node root, int i) {
+		int ceil = -1;
+		while(root != null) {
+			if(root.data >= i) {
+				ceil = root.data;
+				root = root.left;
+			}else {
+				root = root.right;
+			}
+		}
+		return ceil;
+		
+	}
+
+
 
 	private static Node SearchBSTiterative(Node root, int val) {
 		while(root != null && root.data != val) {
