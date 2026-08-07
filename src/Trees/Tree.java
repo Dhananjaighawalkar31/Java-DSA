@@ -106,9 +106,37 @@ class Tree {
 //		buildTreePostOrderInorder(new int[] {},new int[] {});
 //		String serialize = serialize(root);
 //		deserialize(serialize);
-		morrisInorder(root);
+//		morrisInorder(root);
+		FlattenTree(root);
 	}
 	
+
+	private static Node FlattenTree(Node root) {
+		
+		if(root == null ) {
+			return null;
+		}
+		FlattenTree(root.left);
+		FlattenTree(root.right);
+		if(root.left != null) {
+			
+			Node rightTree = root.right;
+			Node temp = root.left;
+			while(temp != null && temp.right != null) {
+				temp = temp.right;
+			}
+
+			temp.right = rightTree;
+
+
+			root.right = root.left;
+			root.left = null;
+			
+		}
+		return root;
+		
+	}
+
 
 	private static void morrisInorder(Node root) {
 		Node curr = root;
