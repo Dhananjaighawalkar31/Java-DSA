@@ -110,9 +110,38 @@ class Tree {
 //		FlattenTree(root);
 //		t.FlattenTreeReversePreOrder(root);
 //		FlattenTreeIterative(root);
-		FlattenTreeMorries(root);
+//		FlattenTreeMorries(root);
+		
+//		SearchBinarySearchTree(root,10);
+//		SearchBSTiterative(root,20);
+
+		
 	}
 	
+
+	private static Node SearchBSTiterative(Node root, int val) {
+		while(root != null && root.data != val) {
+			root = root.data > val ? root.left : root.right;
+		}
+		return root;
+		
+	}
+
+
+
+	private static Node SearchBinarySearchTree(Node root, int val) {
+		if(root == null) {
+			return null;
+		}
+		if(root.data == val) {
+			return root;
+		}
+		else if(root.data > val) {
+			return SearchBinarySearchTree(root.left,val);
+		}
+		return SearchBinarySearchTree(root.right,val);
+	}
+
 
 	private static void FlattenTreeMorries(Node root) {
 		Node curr = root;
