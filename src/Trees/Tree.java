@@ -109,9 +109,28 @@ class Tree {
 //		morrisInorder(root);
 //		FlattenTree(root);
 //		t.FlattenTreeReversePreOrder(root);
-		FlattenTreeIterative(root);
+//		FlattenTreeIterative(root);
+		FlattenTreeMorries(root);
 	}
 	
+
+	private static void FlattenTreeMorries(Node root) {
+		Node curr = root;
+		while(curr != null) {
+			if(curr.left != null) {
+				Node pre = curr.left;
+				while(pre.right!= null) {
+					pre = pre.right;
+				}
+				pre.right = curr.right;
+				curr.right = curr.left;
+				curr.left = null;
+			}
+			curr = curr.right;
+		}
+		
+	}
+
 
 	private static void FlattenTreeIterative(Node root) {
 		Stack<Node> st = new Stack<>();
