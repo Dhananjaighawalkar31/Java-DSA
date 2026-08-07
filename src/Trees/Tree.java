@@ -107,9 +107,25 @@ class Tree {
 //		String serialize = serialize(root);
 //		deserialize(serialize);
 //		morrisInorder(root);
-		FlattenTree(root);
+//		FlattenTree(root);
+		t.FlattenTreeReversePreOrder(root);
+		
 	}
 	
+
+	Node prev = null;
+	private  void FlattenTreeReversePreOrder(Node root) {
+		if(root == null) {
+			return;
+		}
+		FlattenTreeReversePreOrder(root.right);
+		FlattenTreeReversePreOrder(root.left);
+		root.right = prev;
+		root.left = null;
+		prev = root;
+		
+	}
+
 
 	private static Node FlattenTree(Node root) {
 		
