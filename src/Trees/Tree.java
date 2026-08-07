@@ -115,10 +115,38 @@ class Tree {
 //		SearchBinarySearchTree(root,10);
 //		SearchBSTiterative(root,20);
 //		CeilBST(root,10);
+		t.CeilBSTrecursive(root,10);
+		CeilBSTrecursive(10,root);
+		
+	}
+	private static  int CeilBSTrecursive(int target,Node root) {
+		if(root == null) {
+			return -1;
+		}
+		if(root.data >= target) {
+			int leftans = CeilBSTrecursive(target,root.left);
+			if(leftans != -1) {
+				return leftans;
+			}
+			return root.data;
+					
+		}
+			return CeilBSTrecursive(target,root.right);
+		
 		
 	}
 	
-	
+	int ceil = -1;
+	private  int CeilBSTrecursive(Node root, int i) {
+		if(root == null) {
+			return ceil;
+		}
+		if(root.data>=i) {
+			ceil = root.data;
+			return CeilBSTrecursive(root.left,i);
+		}
+		return CeilBSTrecursive(root.right,i);
+	}
 
 
 
