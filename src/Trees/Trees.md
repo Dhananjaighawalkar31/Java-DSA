@@ -589,6 +589,229 @@ Total = 1(root) + 3(from node2) + 2(from node3) = 6 ✓ matches actual node coun
 
 ---
 
+## 32. `buildTreePreOrderInorder` (+ `build` helper)
+
+**Problem:** LeetCode 105 — Reconstruct a unique binary tree given its preorder and inorder traversal arrays.
+
+**Intuition:** Two key facts make this work:
+1. **Preorder's first element is always the root** (root visited before children).
+2. **Inorder splits cleanly around the root** — everything left of root's position in inorder is the left subtree, everything right is the right subtree.
+
+So: grab `preorder[preStart]` as root, find its index in inorder (via a `HashMap<value, index>` built once upfront for O(1) lookup instead of O(n) linear search each time), compute `numsLeft = inRoot - inStart` (size of left subtree), then recursively carve out the correct preorder/inorder index ranges for left and right subtrees. This is a classic **"use one traversal to find the root, use the other to find subtree boundaries"** pattern.
+
+**Why the HashMap matters:** Without it, finding `root.data`'s position in `inorder` every call is O(n), making the whole algorithm O(n²). The map makes each lookup O(1) → overall O(n).
+
+**Test case:**
+```
+preorder = [1,2,4,5,3,6], inorder = [4,2,5,1,6,3]
+→ rebuilds the exact tree from main():
+        1
+       / \
+      2   3
+     / \  /
+    4  5 6
+```
+
+---
+
+## 33. `buildTreePostOrderInorder` (+ `buildPostOrder` helper)
+
+**Problem:** Same reconstruction idea as #32, but from **postorder + inorder** instead of preorder + inorder.
+
+**Intuition:** The only real change: **postorder's LAST element is the root** (root visited after both children in postorder), instead of the first. So you read `postorder[b]` (the end of the current range) as root instead of `preorder[preStart]`. Everything else — using the HashMap to split inorder around the root, then recursing on left/right index ranges — is identical in spirit to #32.
+
+**Common gotcha this code handles correctly:** since postorder is Left-Right-Root, when slicing the postorder array for children you must account for `leftNums` correctly: left subtree occupies `postorder[a .. a+leftNums-1]`, right subtree occupies `postorder[a+leftNums .. b-1]` (root itself is at `b`, excluded from both children's ranges).
+
+**Test case:**
+```
+postorder = [4,5,2,6,3,1], inorder = [4,2,5,1,6,3]
+→ rebuilds the same tree as #32
+```
+
+---
+
+## 34. `serialize`
+
+**Problem:** LeetCode 297 — Convert a tree into a single string so it can be stored/transmitted, then rebuilt later.
+
+**Intuition:** Use **level-order (BFS) with explicit null markers** (`"n"`). Unlike a normal BFS that skips null children, here every position gets serialized — real value OR `"n"` — so that when you read the string back, you know EXACTLY which positions had children and which didn't, without needing extra structure to encode gaps.
+
+**Approach:** Standard BFS, but push `node.left` and `node.right` onto the queue even when they're `null` — then when polling, check `if (node != null)` before deciding whether to append its value or `"n"`.
+
+**Test case:**
+```
+Tree above → serialize(root) = "1 2 3 4 5 n 6 n n n n n n n n "
+(root=1, then 2,3, then 4,5 for node2's children, "n" for node3.left... wait 3 has left=6,
+ so it's actually: level0:[1] level1:[2,3] level2:[4,5,n,6]... then leaves' children all "n")
+```
+*(Best verified by literally running `System.out.println(serialize(root))` — the exact spacing/null pattern is easiest to confirm by eye.)*
+
+---
+
+## 35. `deserialize`
+
+**Problem:** Reverse of #34 — rebuild the tree from the serialized string.
+
+**Intuition:** Mirror the BFS logic exactly. Split the string by spaces, first token is root's value. Then walk the array two-at-a-time (`arr[i]` = left child, `arr[++i]` = right child) for each node popped from the queue — pushing new tree nodes onto the queue only when the token isn't `"n"`. Because serialize() wrote every position (real or "n") in strict BFS order, deserialize() can consume the array in that exact same order and rebuild the identical structure.
+
+**Test case:**
+```
+deserialize(serialize(root)) → produces a tree structurally identical to the original root
+(this "round-trip" property is the standard way to test serialize/deserialize pairs)
+```
+
+---
+
+## 36. `morrisInorder` — ⭐ (see the dedicated interactive dry-run artifact for full step-by-step)
+
+**Problem:** Inorder traversal using **O(1) extra space** — no recursion (no call stack) and no explicit `Stack<Node>`.
+
+**Intuition (the big idea):** Normally, once you go left, you need SOME way to get back up to the parent afterward — that's usually the call stack's job. Morris traversal instead **temporarily borrows the tree's own null right-pointers** to store a "way back" — this is called **threading**.
+
+For any node with a left child:
+1. Find its **inorder predecessor** (the rightmost node in its left subtree — the last node you'd visit before this one).
+2. If that predecessor's `.right` is `null` → it's unused, so **plant a thread**: point it back to the current node, then dive left.
+3. Later, when you naturally arrive back at that predecessor via the thread, you **detect** it (`pre.right == curr` instead of `null`) → that's your signal "I've already explored my left side." You **remove the thread** (restoring the tree exactly as it was — this algorithm cleans up after itself), visit the current node, and move right.
+
+If a node has **no left child**, there's nothing to thread — just visit it immediately and move right (this is the simple base case, same as the "leftmost fallback" idea in iterative inorder).
+
+**Why this matters for you specifically:** this is the "cursor movement" problem — `curr` bounces between levels in a way that looks like it's revisiting nodes, but it's not random: it's following threads it planted itself. **See the separate interactive artifact for a full 9-iteration dry run with diagrams** — reading code alone for this one is genuinely hard; watching `curr` and `pre` move is what makes it click.
+
+**Test case:**
+```
+Tree above → morrisInorder prints: 4 2 5 1 6 3  (matches standard inorder exactly)
+Tree is left completely unchanged after the traversal finishes (all threads removed).
+```
+
+---
+
+## 37. `FlattenTree` (recursive, rewires in place)
+
+**Problem:** LeetCode 114 — Flatten a binary tree into a **linked list following preorder** (using the `right` pointers only, `left` always `null`), in place.
+
+**Intuition:** Recurse first (`FlattenTree(root.left)`, `FlattenTree(root.right)`) so that BY THE TIME you handle the current node, both subtrees are ALREADY flattened lists. Then it's just pointer surgery:
+1. Save `root.right` (the already-flattened right list) aside.
+2. Walk to the END of the already-flattened left list (`while temp.right != null`).
+3. Attach the saved right list to that end.
+4. Move the whole (now-combined) left list into `root.right`, and null out `root.left`.
+
+This is a classic **"solve subproblems first, then splice results together"** divide-and-conquer pattern — same shape as merge step in merge sort.
+
+**Test case:**
+```
+Input:        Output (as a right-only chain):
+    1          1 → 2 → 4 → 5 → 3 → 6  (this IS preorder order!)
+   / \
+  2   3
+ / \  /
+4  5 6
+```
+
+---
+
+## 38. `FlattenTreeReversePreOrder`
+
+**Problem:** Same flattening goal as #37, but a cleverer approach: build the list **backwards**.
+
+**Intuition:** If you traverse in **reverse preorder** (Right → Left → Root, i.e. the mirror image of preorder), and at each node just set `root.right = prev` (the previously processed node) and `root.left = null`, then update `prev = root` for the parent call — you build the correct flattened chain **automatically**, because reverse-preorder visits nodes in the EXACT REVERSE of the order you want them chained. This avoids the "walk to the end of the left list" step in #37 entirely — O(1) extra work per node instead of walking a growing chain each time (making this O(n) total vs #37's O(n²) worst case on skewed trees).
+
+**Test case:**
+```
+Same tree → same output chain: 1 → 2 → 4 → 5 → 3 → 6
+```
+
+---
+
+## 39. `FlattenTreeIterative`
+
+**Problem:** Flatten without recursion, using an explicit stack.
+
+**Intuition:** This is essentially **iterative preorder** (push right then left so left pops first — same trick as method #3), but instead of collecting values into a result list, you rewire pointers as you go: after popping `curr`, whatever is next on top of the stack (`st.peek()`) IS the next node in preorder — so `curr.right = st.peek()` directly builds the chain, and `curr.left = null` cleans up.
+
+**Test case:**
+```
+Same tree → same output chain: 1 → 2 → 4 → 5 → 3 → 6
+```
+
+---
+
+## 40. `FlattenTreeMorries` (Morris-style flattening — O(1) space!)
+
+**Problem:** Flatten the tree with **zero extra space** — no stack, no recursion.
+
+**Intuition:** Reuses the exact threading idea from `morrisInorder` (#36), but applied differently: for every node with a left child, find the **rightmost node of the left subtree** (`pre`), then attach the current node's existing right subtree onto the end of that (`pre.right = curr.right`), then **move the entire left subtree into the right slot** (`curr.right = curr.left; curr.left = null`), and move on (`curr = curr.right`). No threads even need to be "removed" here — this variant permanently rewires the tree rather than temporarily borrowing pointers, since flattening is a permanent restructuring anyway (unlike traversal, which must leave the tree unchanged).
+
+**Test case:**
+```
+Same tree → same output chain: 1 → 2 → 4 → 5 → 3 → 6, achieved in true O(1) extra space
+```
+
+---
+
+## 41. `SearchBinarySearchTree` (recursive)
+
+**Problem:** LeetCode 700 — Search for a value in a **BST** (not just any binary tree).
+
+**Intuition:** This is where BSTs pay off: because of the BST property (left subtree < node < right subtree), you don't need to check both children like in a normal tree search — you can **discard half the tree at every step**, exactly like binary search on a sorted array. `root.data > val` → search only left; otherwise → search only right.
+
+**Test case:**
+```
+On a BST (not the sample tree above, which isn't a valid BST!) e.g.:
+        8
+       / \
+      3   10
+     / \
+    1   6
+SearchBinarySearchTree(root, 6) → returns the node with data=6
+SearchBinarySearchTree(root, 99) → returns null
+```
+
+---
+
+## 42. `SearchBSTiterative`
+
+**Problem:** Same as #41, iterative version (no recursion overhead).
+
+**Intuition:** Direct translation of the recursive logic into a `while` loop — same "eliminate half the tree" logic, just without call-stack frames. This is the version you'd actually want in an interview follow-up ("can you do it without recursion / in O(1) space?").
+
+**Test case:** Same as #41, iterative — identical results, less memory.
+
+---
+
+## 43. `CeilBST` (iterative)
+
+**Problem:** GFG/LeetCode-style — Find the **ceil** of a value in a BST: the smallest value in the tree that is `>= target` (or `-1` if none exists).
+
+**Intuition:** Walk down like a normal BST search, but **remember your best candidate so far**: every time you move into a node whose value `>= target`, that node is a POSSIBLE answer (`ceil = root.data`) — but there might be an even smaller valid one further left, so keep going left. Every time a node's value `< target`, it can never be the ceil (too small), so go right without recording it.
+
+**Test case:**
+```
+BST:        8
+           / \
+          3   10
+         / \
+        1   6
+CeilBST(root, 10) → 10 (exact match)
+CeilBST(root, 7)  → 8  (6 is too small, 8 is the smallest value ≥ 7)
+CeilBST(root, 11) → -1 (nothing in the tree is ≥ 11)
+```
+
+---
+
+## 44. `CeilBSTrecursive` (two versions in your code — worth noting the difference!)
+
+**Problem:** Same ceil logic as #43, but recursive. You actually wrote **two versions** — a nice comparison of two recursion styles:
+
+**Version A — `static int CeilBSTrecursive(int target, Node root)`:**
+Returns the answer directly through the return value. Recurses left when `root.data >= target` (this node is a candidate, but check if left has an even better one via `leftans`); if left subtree returns `-1` (no better candidate found there), falls back to `root.data`. Recurses right (unconditionally returning that result) when `root.data < target`. Fully self-contained — no shared state needed.
+
+**Version B — instance method using `this.ceil` as a field:**
+Instead of returning the answer through the call stack, it **mutates a shared instance variable** `ceil` every time a valid candidate is found, and the recursive calls just return that same field at the end. This works because there's only ever ONE path being explored (BST search doesn't branch), so there's no risk of concurrent overwrites — but it's a different style: **side-effect-based** vs **pure return-value-based**. Generally, the pure version (A) is considered cleaner/safer since it doesn't depend on object state, but the field-based version (B) can be handy when you need to track "best answer so far" across a more complex traversal.
+
+**Test case:** Same as #43 — both versions should return identical answers, e.g. `CeilBSTrecursive(10, root)` → 10, using whichever version you call.
+
+---
+
 ## 🎯 Quick Reference Table
 
 | # | Method | Pattern | LeetCode Equivalent |
@@ -621,6 +844,19 @@ Total = 1(root) + 3(from node2) + 2(from node3) = 6 ✓ matches actual node coun
 | 29 | distanceK | BFS on parent-augmented graph | 863 |
 | 30 | BurningTree | Multi-source BFS (levels=time) | 1376-style |
 | 31 | CountNodeCBT | Height-comparison + formula | 222 (optimal) |
+| 32 | buildTree (pre+in) | Root-from-preorder, split-by-inorder | 105 |
+| 33 | buildTree (post+in) | Root-from-postorder (last elem), split-by-inorder | 106 |
+| 34 | serialize | BFS with null markers | 297 |
+| 35 | deserialize | BFS rebuild from markers | 297 |
+| 36 | morrisInorder | Threading (temporary right-pointers) | 94 (O(1) space) |
+| 37 | FlattenTree | Post-order splice (bottom-up) | 114 |
+| 38 | FlattenTreeReversePreOrder | Reverse-preorder + `prev` pointer | 114 (optimal) |
+| 39 | FlattenTreeIterative | Explicit stack, rewire on the fly | 114 (iterative) |
+| 40 | FlattenTreeMorries | Threading, permanent rewire | 114 (O(1) space) |
+| 41 | SearchBinarySearchTree | BST property, halve search space | 700 |
+| 42 | SearchBSTiterative | Same, no recursion | 700 (iterative) |
+| 43 | CeilBST | BST walk + "best candidate so far" | GFG |
+| 44 | CeilBSTrecursive (x2) | Return-value vs field-based recursion | GFG |
 
 ---
 
