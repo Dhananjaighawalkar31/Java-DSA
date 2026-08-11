@@ -120,10 +120,41 @@ class Tree {
 		floorBSTiterative(10,root);
 		floorBSTRecursive(10,root);
 		insertGivenNodeInBST(root,new Node(9));
-		
+		deleteTheKey(root,4);
 		
 	}
 	
+	private static Node deleteTheKey(Node root, int i) {
+		if(root == null) {
+		    return null;
+		}
+		if(root.data > i) {
+			root.left = deleteTheKey(root.left,i);
+		}else if(root.data < i) {
+			root.right = deleteTheKey(root.right,i);
+		}else {
+			if(root.left == null) {
+				return root.right;
+			}
+			if(root.right == null) {
+				return root.left;
+			}
+			if(root.left != null && root.right != null) {
+				Node rightNode = root.right;
+				Node curr = root.left;
+				while(curr.right != null) {
+					curr = curr.right;
+				}
+				curr.right = rightNode;
+			}	
+			
+			return root.left;
+
+		}
+		return root;		
+		
+	}
+
 	private static Node insertGivenNodeInBST(Node root, Node node) {
 		Node curr = root;
 		while(curr != null) {
