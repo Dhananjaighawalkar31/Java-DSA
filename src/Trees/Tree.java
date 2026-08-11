@@ -117,8 +117,51 @@ class Tree {
 //		CeilBST(root,10);
 		t.CeilBSTrecursive(root,10);
 		CeilBSTrecursive(10,root);
+		floorBSTiterative(10,root);
+		floorBSTRecursive(10,root);
 		
 	}
+	
+	private static int floorBSTRecursive(int i, Node root) {
+		if(root == null) {
+			return -1;
+		}
+
+		if(root.data <= i) {
+			int rightans = floorBSTRecursive(i,root.right);
+			if(rightans != -1) {
+				return rightans;
+			}
+			return root.data;
+		}
+		return floorBSTRecursive(i,root.left);
+		
+	}
+
+	private static int floorBSTiterative(int x,Node root) {
+		Node curr = root;
+		int floor = -1;
+		while(curr != null) {
+			if(curr.data == x) {
+				floor = curr.data;
+				return floor;
+			}
+			if(curr.data < x) {
+				floor = curr.data;
+				curr = curr.right;
+			}else {
+				curr = curr.left;
+			}
+		}
+		return floor;
+	}
+	
+	
+	
+	
+	
+	
+	
 	private static  int CeilBSTrecursive(int target,Node root) {
 		if(root == null) {
 			return -1;
