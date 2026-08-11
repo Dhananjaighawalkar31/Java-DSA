@@ -119,9 +119,36 @@ class Tree {
 		CeilBSTrecursive(10,root);
 		floorBSTiterative(10,root);
 		floorBSTRecursive(10,root);
+		insertGivenNodeInBST(root,new Node(9));
+		
 		
 	}
 	
+	private static Node insertGivenNodeInBST(Node root, Node node) {
+		Node curr = root;
+		while(curr != null) {
+			int x = curr.data;
+			int i = node.data;
+			if(i>x) {
+				if(curr.right != null) {
+					curr = curr.right;
+				}else {
+					curr.right = node;
+					break;
+				}
+			}else {
+				if(curr.left != null) {
+					curr = curr.left;
+				}else {
+					curr.left = node;
+					break;
+				}
+			}
+		}
+		return root;
+		
+	}
+
 	private static int floorBSTRecursive(int i, Node root) {
 		if(root == null) {
 			return -1;
