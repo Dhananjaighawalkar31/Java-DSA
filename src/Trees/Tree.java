@@ -121,9 +121,31 @@ class Tree {
 		floorBSTRecursive(10,root);
 		insertGivenNodeInBST(root,new Node(9));
 		deleteTheKey(root,4);
+		kthSmallest(root,2);
 		
 	}
+	private static int kthSmallest(Node root, int k) {
+		
+		List<Node> li = new ArrayList<>();
+		kthSmallestHelper(root,li);
+		int n = li.size();
+		
+		return li.get(k-1).data;
+	}
 	
+	static void kthSmallestHelper(Node root,List<Node> li) {
+		if(root == null) {
+			return;
+		}
+		if(root.left != null) {
+			kthSmallestHelper(root.left,li);
+		}
+		li.add(root);
+		if(root.right != null) {
+			kthSmallestHelper(root.right,li);
+		}
+		
+	}
 	private static Node deleteTheKey(Node root, int i) {
 		if(root == null) {
 		    return null;
