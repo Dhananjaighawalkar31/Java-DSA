@@ -115,14 +115,31 @@ class Tree {
 //		SearchBinarySearchTree(root,10);
 //		SearchBSTiterative(root,20);
 //		CeilBST(root,10);
-		t.CeilBSTrecursive(root,10);
-		CeilBSTrecursive(10,root);
-		floorBSTiterative(10,root);
-		floorBSTRecursive(10,root);
-		insertGivenNodeInBST(root,new Node(9));
-		deleteTheKey(root,4);
-		kthSmallest(root,2);
+//		t.CeilBSTrecursive(root,10);
+//		CeilBSTrecursive(10,root);
+//		floorBSTiterative(10,root);
+//		floorBSTRecursive(10,root);
+//		insertGivenNodeInBST(root,new Node(9));
+//		deleteTheKey(root,4);
+//		kthSmallest(root,2);
+		validBST(root);
 		
+	}
+	private static boolean validBST(Node root) {
+		if(root == null) {
+			return false;
+		}
+		return validBST(root,Integer.MIN_VALUE,Integer.MAX_VALUE);
+		
+	}
+	private static boolean validBST(Node root, int minValue, int maxValue) {
+		if(root == null) {
+			return true;
+		}
+		if(root.data <= minValue || root.data >= maxValue) {
+			return false;
+		}
+		return validBST(root.left,minValue,root.data) && validBST(root.right,root.data,maxValue);
 	}
 	private static int kthSmallest(Node root, int k) {
 		
