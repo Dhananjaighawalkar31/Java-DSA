@@ -142,7 +142,22 @@ class Tree {
 //		checkBST(root);
 //		validBST2(root);
 		LCAbst(root,new Node(2),new Node(3));
+		bstFromPreorder(new int[0]);
 		
+	}
+	private static Node bstFromPreorder(int[] arr){ 
+		return bstFromPreorder(arr,Integer.MAX_VALUE,new int[] {0});
+		
+	}
+	private static Node bstFromPreorder(int[] arr, int maxValue, int[] i) {
+		if(i[0] == arr.length || arr[i[0]] > maxValue) {
+			return null;
+		}
+		Node root = new Node(arr[i[0]]);
+		i[0]++;
+		root.left = bstFromPreorder(arr,root.data,i);
+		root.right = bstFromPreorder(arr,maxValue,i);
+		return root;
 	}
 	private static Node LCAbst(Node root, Node p, Node q) {
 		if(root == null || root.data == p.data || root.data == q.data) {
