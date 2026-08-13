@@ -141,9 +141,37 @@ class Tree {
 //		validBST(root);
 //		checkBST(root);
 //		validBST2(root);
-		LCAbst(root,new Node(2),new Node(3));
-		bstFromPreorder(new int[0]);
+//		LCAbst(root,new Node(2),new Node(3));
+//		bstFromPreorder(new int[0]);
+//		inorderSuccessor(root,new Node(2));
+		inorderPredecessor(root,new Node(2));
+	}
+	private static Node inorderPredecessor(Node root, Node target) {
+		Node curr = root;
+		Node pre = null;
+		while(curr != null) {
+			if(curr.data>target.data) {
+				curr = curr.left;
+			}else {
+				pre = curr;
+				curr = curr.right;
+			}
+		}
+		return pre;
 		
+	}
+	private static Node inorderSuccessor(Node root, Node target) {
+		Node curr = root;
+		Node successor = null;
+		while(curr != null) {
+			if(curr.data > target.data) {
+				successor = curr;
+				curr = curr.left;
+			}else {
+				curr = curr.right;
+			}
+		}
+		return successor;
 	}
 	private static Node bstFromPreorder(int[] arr){ 
 		return bstFromPreorder(arr,Integer.MAX_VALUE,new int[] {0});
