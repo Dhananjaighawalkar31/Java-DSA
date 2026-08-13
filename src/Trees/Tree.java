@@ -139,8 +139,24 @@ class Tree {
 //		deleteTheKey(root,4);
 //		kthSmallest(root,2);
 //		validBST(root);
-		checkBST(root);
-		validBST2(root);
+//		checkBST(root);
+//		validBST2(root);
+		LCAbst(root,new Node(2),new Node(3));
+		
+	}
+	private static Node LCAbst(Node root, Node p, Node q) {
+		if(root == null || root.data == p.data || root.data == q.data) {
+			return root;
+		}
+		
+		if(root.data < p.data && root.data < q.data) {
+			return LCAbst(root.right,p,q);
+		}
+		if(root.data > p.data && root.data > q.data) {
+			return LCAbst(root.left,p,q);
+		}
+		return root;
+		
 	}
 	private static boolean validBST2(Node root) {
 
