@@ -67,6 +67,30 @@ class PairForWidthOFTree{
 		this.index = index;
 	}
 }
+class BSTIterator{
+	private Stack<Node> st = new Stack<>();
+	public BSTIterator(Node root) {
+		pushAll(root);
+	}
+	private void pushAll(Node root) {
+		Node curr = root;
+		while(curr!= null) {
+			st.push(curr);
+			curr = curr.left;
+		}
+		
+	}
+	public int next() {
+		Node temp = st.pop();
+		pushAll(temp.right);
+		return temp.data;
+				
+	}
+	public boolean hasNext() {
+		return st.isEmpty();
+	}
+	
+}
 class Tree {
 	int max = 0;
 
