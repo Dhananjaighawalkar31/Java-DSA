@@ -12,6 +12,22 @@ import java.util.Queue;
 import java.util.Stack;
 import java.util.TreeMap;
 
+
+class Info{
+	int min;
+	int max;
+	boolean isBST;
+	Info(int min,int max,boolean isBST){
+		this.min = min;
+		this.max = max;
+		this.isBST = isBST;
+	}
+}
+
+
+
+
+
 class Node {
 
 	int data;
@@ -122,12 +138,52 @@ class Tree {
 //		insertGivenNodeInBST(root,new Node(9));
 //		deleteTheKey(root,4);
 //		kthSmallest(root,2);
-		validBST(root);
-		
+//		validBST(root);
+		checkBST(root);
+		validBST2(root);
 	}
+	private static boolean validBST2(Node root) {
+
+	    if(root == null) {
+	        return true;
+	    }
+
+	    return checkBST(root).isBST;
+	}
+	private static Info checkBST(Node root) {
+
+	    if(root == null) {
+	        return new Info(Integer.MAX_VALUE, Integer.MIN_VALUE, true);
+	    }
+
+	    Info left = checkBST(root.left);
+	    Info right = checkBST(root.right);
+
+	    if(!left.isBST || !right.isBST) {
+	        return new Info(
+	            Math.min(root.data, Math.min(left.min, right.min)),
+	            Math.max(root.data, Math.max(left.max, right.max)),
+	            false
+	        );
+	    }
+
+	    if(left.max >= root.data || right.min <= root.data) {
+	        return new Info(
+	            Math.min(root.data, Math.min(left.min, right.min)),
+	            Math.max(root.data, Math.max(left.max, right.max)),
+	            false
+	        );
+	    }
+
+	    int min = Math.min(root.data, Math.min(left.min, right.min));
+	    int max = Math.max(root.data, Math.max(left.max, right.max));
+
+	    return new Info(min, max, true);
+	}
+
 	private static boolean validBST(Node root) {
 		if(root == null) {
-			return false;
+			return true;
 		}
 		return validBST(root,Integer.MIN_VALUE,Integer.MAX_VALUE);
 		
