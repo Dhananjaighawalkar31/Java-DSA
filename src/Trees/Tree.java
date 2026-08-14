@@ -69,20 +69,32 @@ class PairForWidthOFTree{
 }
 class BSTIterator{
 	private Stack<Node> st = new Stack<>();
-	public BSTIterator(Node root) {
+	boolean isReverse;
+	public BSTIterator(Node root,boolean isReverse) {
+		this.isReverse = isReverse;
 		pushAll(root);
 	}
 	private void pushAll(Node root) {
 		Node curr = root;
 		while(curr!= null) {
 			st.push(curr);
-			curr = curr.left;
+			if(isReverse) {
+				
+				curr = curr.left;
+			}else {
+				curr = curr.right;
+			}
 		}
 		
 	}
 	public int next() {
 		Node temp = st.pop();
-		pushAll(temp.right);
+		if(isReverse) {
+			
+			pushAll(temp.right);
+		}else {
+			pushAll(temp.left);
+		}
 		return temp.data;
 				
 	}
@@ -168,7 +180,30 @@ class Tree {
 //		LCAbst(root,new Node(2),new Node(3));
 //		bstFromPreorder(new int[0]);
 //		inorderSuccessor(root,new Node(2));
-		inorderPredecessor(root,new Node(2));
+//		inorderPredecessor(root,new Node(2));
+		twoSumFindTarget(root,4);
+	}
+	private static boolean twoSumFindTarget(Node root, int k) {
+		if(root == null) {
+			return false;
+		}
+		BSTIterator l = new BSTIterator(root,false); //left pointer
+		BSTIterator r = new BSTIterator(root,true); //right pointer
+
+		int i = l.next();
+		int j = r.next();
+		while(i<j) {
+			if(i+j<k) {
+				i = l.next();
+			}else if(i+j>k) {
+				j = r.next();
+			}else if(i+j == k) {
+				return true;
+			}
+		}
+		return false;
+		
+		
 	}
 	private static Node inorderPredecessor(Node root, Node target) {
 		Node curr = root;
