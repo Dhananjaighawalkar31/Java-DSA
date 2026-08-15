@@ -23,7 +23,17 @@ class Info{
 		this.isBST = isBST;
 	}
 }
-
+class LargestBST{
+	int size;
+	int min;
+	int max;
+	LargestBST(int size,int max,int min){
+		this.size = size;
+		
+		this.max = max; 
+		this.min = min;
+	}
+}
 
 
 
@@ -181,8 +191,78 @@ class Tree {
 //		bstFromPreorder(new int[0]);
 //		inorderSuccessor(root,new Node(2));
 //		inorderPredecessor(root,new Node(2));
-		twoSumFindTarget(root,4);
+//		twoSumFindTarget(root,4);
+//		t.inorderRecoverBST(root);
+		largestBST(root);
 	}
+	
+	private static int largestBST(Node root) {
+		LargestBST ans = helper(root,new LargestBST(0,Integer.MIN_VALUE,Integer.MAX_VALUE));
+		return ans.size;
+		
+	}
+
+	private static LargestBST helper(Node root, LargestBST largestBST) {
+		if(root == null) {
+			return new LargestBST(0,Integer.MIN_VALUE,Integer.MAX_VALUE);
+		}
+		if(root.left == null && root.right == null) {
+			return new LargestBST(1,root.data,root.data);
+		}
+		LargestBST l = helper(root.left,largestBST);
+		LargestBST r = helper(root.right,largestBST);
+		if(l.max < root.data && root.data < r.min ) {
+			return new LargestBST(l.size + r.size + 1,Math.max(Math.max(l.max, r.max),root.data),Math.min(Math.min(l.min, r.min),root.data));
+		}
+		
+		return new LargestBST(Math.max(l.size,r.size),Integer.MAX_VALUE,Integer.MIN_VALUE);
+		
+	}
+
+	Node curr = null;
+	Node pre = null;
+	Node first = null;
+	Node mid = null;
+	Node second = null;
+	
+
+	public void recoverBST(Node root) {
+		    inorderRecoverBST(root);
+
+		    if(second != null) {
+		        int temp = first.data;
+		        first.data = second.data;
+		        second.data = temp;
+		    } else {
+		        int temp = first.data;
+		        first.data = mid.data;
+		        mid.data = temp;
+		    }
+	}
+	
+	public  void inorderRecoverBST(Node root) {
+		if(root == null) {
+			return;
+		}
+		inorderRecoverBST(root.left);
+		curr = root;
+		if(pre != null) {
+			if(pre.data > curr.data) {
+				if(first == null) {
+					first = pre;
+					mid = curr;
+				}else {
+					second = curr;
+				}
+			}
+		}
+			pre = curr;
+		
+		
+		inorderRecoverBST(root.right);
+	}
+			
+	
 	private static boolean twoSumFindTarget(Node root, int k) {
 		if(root == null) {
 			return false;
