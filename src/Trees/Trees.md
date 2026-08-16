@@ -110,7 +110,7 @@
 
 ## 🌲 Shared Example Trees
 
-Used consistently throughout unless a problem specifically needs a BST.
+Used consistently throughout unless a problem specifically needs a BST..
 
 **General tree** (from your `main()` — used for all non-BST problems):
 ```text
