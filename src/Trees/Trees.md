@@ -8,6 +8,18 @@
 
 ---
 
+## 📖 At a Glance
+
+| | |
+|---|---|
+| **Total methods covered** | 60, across 8 categories (traversals → basic recursion → BFS/views → ancestors → graph-augmented → construction/serialization → Morris/flatten → BST operations) |
+| **Known real bugs, flagged inline** | `addAtTail`-style crashes aside (that's the LinkedList handbook) — here: Problem 41's `hasPathSum` null-root crash, Problem 48's empty-tree insert, Problem 56's `inorderPredecessor` wrong-answer bug, Problem 57's `BSTIterator` double bug, Problem 58's `twoSumFindTarget` (always returns `false` as a result of #57) |
+| **Where `main()` currently calls the wrong tree** | Problem 53 (`LCAbst`) — your `main()`'s only active line runs a BST-only method against the original non-BST tree; traced in detail there |
+| **Best entry points if you're short on time** | Problem 36 (Morris Inorder — has a companion interactive artifact), Problem 52 vs 51 (two techniques, same problem), Problem 57→58 (a real bug chain worth understanding) |
+| **How to navigate** | Full index below. Every `⚠️` marker = a verified bug, documented with a dry-run proof and a fix. Every `⭐` = worth comparing directly against a sibling problem. |
+
+---
+
 ## 📇 Progression Index
 
 *(In the order you actually wrote them in the file — helper methods like `markParents`, `build`, `buildPostOrder`, `heightLeft/Right`, `isLeaf` are folded into the problem they support rather than listed separately.)*
@@ -75,6 +87,25 @@
 44. Ceil in a BST (Recursive — Version A: pure return value)
 45. Ceil in a BST (Recursive — Version B: instance field / side-effect)
 
+**Binary Search Tree — Structural & Query Operations**
+46. Floor in a BST (Iterative)
+47. Floor in a BST (Recursive)
+48. Insert into a BST (Iterative)
+49. Delete a Node from a BST (Merge Strategy)
+50. Kth Smallest Element in a BST
+51. Validate BST (Range-Bounding, Top-Down)
+52. Validate BST (Min/Max Propagation, Bottom-Up) ⭐ *(compare directly against #51)*
+53. Lowest Common Ancestor in a BST (Optimized) ⚠️ *(see note — your `main()` currently calls this on the wrong tree)*
+
+**Advanced BST Techniques**
+54. Construct BST from Preorder Traversal
+55. Inorder Successor in a BST
+56. Inorder Predecessor in a BST ⚠️ *(real bug — wrong answer when target value exists in the tree)*
+57. BST Iterator (Controlled Ascending / Descending Traversal) ⚠️ *(two bugs — `hasNext()` inverted, `isReverse` flag semantics inverted)*
+58. Two Sum IV — Input is a BST ⚠️ *(currently always returns `false` — direct consequence of #57)*
+59. Recover Binary Search Tree
+60. Largest BST Subtree
+
 ---
 
 ## 🌲 Shared Example Trees
@@ -100,6 +131,36 @@ PreOrder: `1 2 4 5 3 6` · InOrder: `4 2 5 1 6 3` · PostOrder: `4 5 2 6 3 1` ·
      1   6      14
 ```
 InOrder (sorted): `1 3 6 8 10 14`
+
+**New helper class used by Problems 51–52:**
+```java
+class Info {
+    int min;
+    int max;
+    boolean isBST;
+    Info(int min, int max, boolean isBST) {
+        this.min = min; this.max = max; this.isBST = isBST;
+    }
+}
+```
+Bundles a subtree's minimum value, maximum value, and whether it's a valid BST, all in one return value — this is what lets `checkBST` (Problem 52) validate the whole tree in a single bottom-up pass instead of needing a second top-down range check like `validBST` (Problem 51) does.
+
+**Two more helper classes used by Problems 57–60:**
+```java
+class BSTIterator {
+    private Stack<Node> st = new Stack<>();
+    boolean isReverse;
+    // ... see Problem 57 — has two real bugs, both documented and fixed there
+}
+class LargestBST {
+    int size;
+    int min;
+    int max;
+    LargestBST(int size, int max, int min) { ... }  // note: constructor order is (size, MAX, min)
+}
+```
+
+**⚠️ A note before you get to Problem 53:** your `main()` currently has `LCAbst(root, new Node(2), new Node(3));` as its only active (uncommented) call — and `root` there is still the *original* tree from the top of `main()` (`1,2,3,4,5,6`), which is **not a valid BST**. `LCAbst` specifically relies on BST ordering to decide which way to recurse, so running it against a non-BST tree doesn't error out — it just silently returns the wrong node. Problem 53 traces through exactly what happens and why, so you can see the wrong answer it currently produces versus the correct one it gives on an actual BST.
 
 ---
 
@@ -3309,6 +3370,1336 @@ This keeps the side-effect style but removes the cross-call contamination risk.
 
 ---
 
+# Problem 46 — Floor in a BST (Iterative)
+
+## 1. What is the problem?
+The mirror image of Ceil (Problem 43): find the **floor** of a target value in a BST — the *largest* value present in the tree that is `<= target`. Return `-1` if nothing qualifies (every value in the tree is bigger than the target).
+
+## 2. Example Tree
+The shared BST example.
+
+## 3. My Code
+```java
+private static int floorBSTiterative(int x, Node root) {
+    Node curr = root;
+    int floor = -1;
+    while (curr != null) {
+        if (curr.data == x) {
+            floor = curr.data;
+            return floor;
+        }
+        if (curr.data < x) {
+            floor = curr.data;
+            curr = curr.right;
+        } else {
+            curr = curr.left;
+        }
+    }
+    return floor;
+}
+```
+
+## 4. Issues / Bugs / Edge Cases
+None — correct, and a clean direct mirror of `CeilBST` (Problem 43).
+
+## 5. Intuition & Why This Approach
+Exactly the same "walk down, remember your best candidate so far" pattern as Ceil, just flipped:
+- If the current node's value is `< target`, it's a **valid candidate** (record it) — but there might be an even *larger* valid candidate still `<= target` further down the **right** subtree, so keep going right.
+- If the current node's value is `> target`, it can never be a valid floor — go left to look for something smaller.
+- An exact match (`== target`) is trivially both the floor and the answer — return immediately.
+
+## 6. Line-by-Line Walkthrough
+| Line | What happens |
+|---|---|
+| `if (curr.data == x) { floor = curr.data; return floor; }` | Exact match — nothing can beat this, return immediately |
+| `if (curr.data < x) { floor = curr.data; curr = curr.right; }` | Valid candidate — record it, then look right for something even closer to (but still `<=`) the target |
+| `else { curr = curr.left; }` | Too big — can never be the floor, go left |
+
+## 7. Dry Run — `floorBSTiterative(7, root)`
+```text
+curr=8: 8==7?no. 8<7?no(8>7) → curr=curr.left=3
+curr=3: 3==7?no. 3<7?yes → floor=3, curr=curr.right=6
+curr=6: 6==7?no. 6<7?yes → floor=6, curr=curr.right=null
+curr=null → loop ends
+return floor=6
+```
+Result: **6** — correctly the largest value in the tree that's `<= 7`.
+
+## 8. Test Cases
+| Input | target | Output |
+|---|---|---|
+| BST example | 7 | 6 |
+| BST example | 8 (exact match) | 8 |
+| BST example | 0 (smaller than everything) | -1 |
+| BST example | 100 (larger than everything) | 14 |
+| Empty tree | any | -1 |
+
+## Better / Alternative Approach
+Already the standard, optimal O(h) iterative solution. See Problem 47 for the recursive equivalent.
+
+---
+
+# Problem 47 — Floor in a BST (Recursive)
+
+## 1. What is the problem?
+Same as Problem 46, recursive version — worth comparing directly against `CeilBSTrecursive` Version A (Problem 44), since this is its exact structural mirror.
+
+## 2. Example Tree
+The shared BST example.
+
+## 3. My Code
+```java
+private static int floorBSTRecursive(int i, Node root) {
+    if (root == null) {
+        return -1;
+    }
+    if (root.data <= i) {
+        int rightans = floorBSTRecursive(i, root.right);
+        if (rightans != -1) {
+            return rightans;
+        }
+        return root.data;
+    }
+    return floorBSTRecursive(i, root.left);
+}
+```
+
+## 4. Issues / Bugs / Edge Cases
+None — correct.
+
+## 5. Intuition & Why This Approach
+Mirror image of `CeilBSTrecursive` Version A: if `root.data <= target`, this node is a *candidate* — check the **right** subtree first for something even closer (larger, but still `<= target`); if the right subtree found nothing better, this node itself is the best available answer. If `root.data > target`, the entire answer must come from the **left** subtree instead, so just return whatever that recursive call finds.
+
+## 6. Line-by-Line Walkthrough
+| Line | What happens |
+|---|---|
+| `if (root == null) return -1;` | Ran off the tree, no candidate down this path |
+| `if (root.data <= i)` | Valid candidate |
+| `int rightans = floorBSTRecursive(i, root.right);` | Look right for something even closer to the target |
+| `if (rightans != -1) return rightans;` | Right subtree found something better — prefer it |
+| `return root.data;` | Otherwise, this node is the best available |
+| `return floorBSTRecursive(i, root.left);` | Too big — the answer, if any, lives entirely in the left subtree |
+
+## 7. Dry Run — `floorBSTRecursive(7, root)`
+```text
+floorBSTRecursive(7, 8): 8<=7? no → return floorBSTRecursive(7, root.left=3)
+floorBSTRecursive(7, 3): 3<=7? yes → rightans = floorBSTRecursive(7, 3.right=6)
+  floorBSTRecursive(7, 6): 6<=7? yes → rightans2 = floorBSTRecursive(7, 6.right=null)
+    floorBSTRecursive(7, null): return -1
+  rightans2 = -1 → return root.data = 6
+rightans = 6, not -1 → return 6
+```
+Result: **6** — matches the iterative version exactly.
+
+## 8. Test Cases
+| Input | target | Output |
+|---|---|---|
+| BST example | 7 | 6 |
+| BST example | 8 | 8 |
+| BST example | 0 | -1 |
+| BST example | 100 | 14 |
+| Empty tree | any | -1 |
+
+## Better / Alternative Approach
+Already the standard, optimal O(h) recursive solution — a clean, self-contained (no shared state) mirror of Problem 44's approach to Ceil.
+
+---
+
+# Problem 48 — Insert into a BST (Iterative)
+
+## 1. What is the problem?
+LeetCode 701. Insert a new node into a BST at the position that preserves the BST ordering property.
+
+## 2. Example Tree
+The shared BST example, inserting the value `9`.
+
+## 3. My Code
+```java
+private static Node insertGivenNodeInBST(Node root, Node node) {
+    Node curr = root;
+    while (curr != null) {
+        int x = curr.data;
+        int i = node.data;
+        if (i > x) {
+            if (curr.right != null) {
+                curr = curr.right;
+            } else {
+                curr.right = node;
+                break;
+            }
+        } else {
+            if (curr.left != null) {
+                curr = curr.left;
+            } else {
+                curr.left = node;
+                break;
+            }
+        }
+    }
+    return root;
+}
+```
+
+## 4. Issues / Bugs / Edge Cases
+- **Real bug: inserting into an empty tree silently loses the node.** If `root == null`, the `while (curr != null)` loop never runs at all — the method just returns `root`, which is still `null`. The new node is never attached anywhere, and the caller has no way to know a brand-new root should have been created. Calling `insertGivenNodeInBST(null, new Node(5))` returns `null`, not a one-node tree containing `5`.
+- **Design choice worth naming explicitly (not a bug):** the `else` branch (triggered when `i <= x`, i.e., the new value is less than *or equal to* the current node) sends duplicates left. This is a valid convention some BSTs use, but it's implicit here — worth knowing this is *your* choice, not an inherent BST requirement, since other implementations reject duplicates outright or send them right instead.
+
+## 5. Intuition & Why This Approach
+Standard BST insertion: walk down comparing the new value against each node, going right if it's bigger, left otherwise — exactly the same directional logic as `SearchBinarySearchTree` (Problem 41), except instead of stopping when you find a match, you keep going until you find an **empty slot** (a `null` child), and that's where the new node gets attached.
+
+## 6. Line-by-Line Walkthrough
+| Line | What happens |
+|---|---|
+| `if (i > x)` | New value belongs to the right |
+| `if (curr.right != null) curr = curr.right;` | Keep walking right |
+| `else { curr.right = node; break; }` | Found the empty slot — attach and stop |
+| `else` branch (mirror logic) | Same idea, walking left |
+
+## 7. Dry Run — `insertGivenNodeInBST(root, new Node(9))`
+```text
+curr=8: x=8,i=9. i>x(9>8) → curr.right=10 exists → curr=10.
+curr=10: x=10,i=9. i>x? 9>10? no → else: curr.left? 10 has no left child → curr.left = node(9). break.
+```
+Result: node `9` is attached as `10`'s new left child.
+```text
+          8
+        /   \
+       3     10
+      / \    /  \
+     1   6  9    14
+```
+
+## 8. Test Cases
+| Call | On tree | Result |
+|---|---|---|
+| `insertGivenNodeInBST(root, new Node(9))` | BST example | `9` becomes `10`'s left child |
+| `insertGivenNodeInBST(root, new Node(0))` | BST example | `0` becomes `1`'s left child (walks 8→3→1→left) |
+| `insertGivenNodeInBST(root, new Node(20))` | BST example | `20` becomes `14`'s right child |
+| `insertGivenNodeInBST(null, new Node(5))` | empty tree | **currently returns `null` — the node is silently lost, see bug above** |
+
+## Better / Alternative Approach
+Fix the empty-tree bug with an upfront check:
+```java
+private static Node insertGivenNodeInBST(Node root, Node node) {
+    if (root == null) { return node; }
+    Node curr = root;
+    ...
+}
+```
+With that one-line fix, this is already the standard, optimal O(h) iterative BST insertion.
+
+---
+
+# Problem 49 — Delete a Node from a BST (Merge Strategy)
+
+## 1. What is the problem?
+LeetCode 450. Remove a node with a given value from a BST, correctly reconnecting its subtrees so the result is still a valid BST.
+
+## 2. Example Tree
+The shared BST example, deleting the value `3` (which has two children: `1` and `6`) — the interesting case worth tracing in full.
+
+## 3. My Code
+```java
+private static Node deleteTheKey(Node root, int i) {
+    if (root == null) {
+        return null;
+    }
+    if (root.data > i) {
+        root.left = deleteTheKey(root.left, i);
+    } else if (root.data < i) {
+        root.right = deleteTheKey(root.right, i);
+    } else {
+        if (root.left == null) {
+            return root.right;
+        }
+        if (root.right == null) {
+            return root.left;
+        }
+        if (root.left != null && root.right != null) {
+            Node rightNode = root.right;
+            Node curr = root.left;
+            while (curr.right != null) {
+                curr = curr.right;
+            }
+            curr.right = rightNode;
+        }
+        return root.left;
+    }
+    return root;
+}
+```
+
+## 4. Issues / Bugs / Edge Cases
+None — this is a correct, complete implementation of BST deletion. Worth explicitly noting: this uses the **merge strategy** rather than the more commonly-taught "replace with inorder successor" approach — see the intuition below for why both are valid.
+
+## 5. Intuition & Why the Merge Strategy (Instead of Inorder Successor)
+Standard BST search first (`root.data > i` → search left, `root.data < i` → search right) until the target node is found. Once found, there are three cases:
+- **No left child** → the right subtree can just take this node's place entirely (`return root.right`).
+- **No right child** → symmetric (`return root.left`).
+- **Both children exist** — this is the interesting case. The most commonly-taught technique replaces the deleted node's *value* with its inorder successor. **Your approach instead physically re-grafts the subtrees**: walk to the **rightmost node of the left subtree** (the predecessor — the largest value smaller than the deleted node), and attach the *entire right subtree* there. Since every value in the right subtree is larger than every value in the left subtree (that's the BST property), and the rightmost node of the left subtree is the single largest value in that left subtree, attaching the right subtree as its right child preserves BST ordering perfectly. Then the **left subtree** (now containing everything, correctly merged) simply takes the deleted node's place.
+
+Both techniques are equally valid, correct O(h) solutions to the same problem — just different "which side absorbs which" strategies.
+
+## 6. Line-by-Line Walkthrough
+| Line | What happens |
+|---|---|
+| `if (root.data > i) root.left = deleteTheKey(root.left, i);` | Standard BST search, left |
+| `else if (root.data < i) root.right = deleteTheKey(root.right, i);` | Standard BST search, right |
+| `if (root.left == null) return root.right;` | Zero or one child (right only) — right subtree replaces this node |
+| `if (root.right == null) return root.left;` | Symmetric — left subtree replaces this node |
+| `Node curr = root.left; while (curr.right != null) curr = curr.right;` | Find the rightmost (largest) node in the left subtree |
+| `curr.right = rightNode;` | Graft the entire right subtree on as its right child |
+| `return root.left;` | The (now-merged) left subtree takes the deleted node's place entirely |
+
+## 7. Dry Run — `deleteTheKey(root, 3)` (deleting a node with two children)
+```text
+deleteTheKey(8, 3): 8>3 → root.left = deleteTheKey(3, 3)
+  deleteTheKey(3, 3): data==i → left=1(not null), right=6(not null) → two-children case
+    rightNode = 6 (root.right)
+    curr = root.left = 1
+    while(curr.right != null): 1.right is null → loop doesn't run, curr stays 1
+    curr.right = rightNode → 1.right = 6
+    return root.left → return node 1 (now with right child 6)
+root(8).left = node 1 (with right=6)
+return root (8)
+```
+Result:
+```text
+        8
+       / \
+      1   10
+       \    \
+        6    14
+```
+Node `3` is gone; its left subtree (`1`) absorbed its right subtree (`6`) as `1`'s new right child, and the whole merged piece took `3`'s old spot. BST ordering is preserved: `1 < 6 < 8`.
+
+## 8. Test Cases
+| Call | On tree | Result |
+|---|---|---|
+| `deleteTheKey(root, 3)` | BST example | traced above — `1` absorbs `6`, replaces `3` |
+| `deleteTheKey(root, 6)` | BST example | `6` is a leaf — simply removed, `3`'s right becomes `null` |
+| `deleteTheKey(root, 14)` | BST example | `14` is a leaf — simply removed |
+| `deleteTheKey(root, 99)` | BST example (value doesn't exist) | tree unchanged (search runs off the end, hits `root==null`, returns `null` up through a chain that never matches) |
+| `deleteTheKey(root, 8)` | BST example (deleting the root itself, two children) | left subtree (`3`'s whole tree) absorbs right subtree (`10`'s whole tree) at `3`'s rightmost descendant (`6`), and `3`'s subtree becomes the new root |
+
+## Better / Alternative Approach
+Both this merge strategy and the more commonly-taught inorder-successor-value-copy approach are equally correct, O(h)-time solutions — genuinely a matter of preference, not one being objectively better. The inorder-successor approach is arguably slightly more intuitive to explain out loud ("replace the value, then delete the successor instead"), but your merge approach avoids a second search-and-delete pass for the successor, doing the whole operation in a single traversal.
+
+---
+
+# Problem 50 — Kth Smallest Element in a BST
+
+## 1. What is the problem?
+LeetCode 230. Find the `k`-th smallest value in the tree (1-indexed).
+
+## 2. Example Tree
+The shared BST example.
+
+## 3. My Code
+```java
+private static int kthSmallest(Node root, int k) {
+    List<Node> li = new ArrayList<>();
+    kthSmallestHelper(root, li);
+    int n = li.size();
+    return li.get(k - 1).data;
+}
+
+static void kthSmallestHelper(Node root, List<Node> li) {
+    if (root == null) {
+        return;
+    }
+    if (root.left != null) {
+        kthSmallestHelper(root.left, li);
+    }
+    li.add(root);
+    if (root.right != null) {
+        kthSmallestHelper(root.right, li);
+    }
+}
+```
+
+## 4. Issues / Bugs / Edge Cases
+- **Unguarded precondition:** no bounds check on `k`. If `k` is larger than the number of nodes (or `k <= 0`), `li.get(k-1)` throws an `IndexOutOfBoundsException` rather than failing gracefully.
+- **Dead code, harmless:** `int n = li.size();` is computed but never actually used anywhere in the method.
+- **Minor style redundancy** (not a bug): the `if (root.left != null)` / `if (root.right != null)` guards inside the helper are unnecessary — the base case `if (root == null) return;` at the top already makes an unconditional recursive call into a `null` child perfectly safe. This is the same small habit noticed in `ChildrenSumProperty` back in Problem 28.
+
+## 5. Intuition & Why This Approach
+The core insight: **an inorder traversal of a BST visits every node in sorted order**, for free, by definition of the BST property. So rather than building any special "kth smallest" logic, `kthSmallestHelper` is just a plain inorder traversal that collects nodes into a list instead of printing them — once that list exists, the `k`-th smallest value is simply sitting at index `k-1` (converting from 1-indexed to 0-indexed).
+
+## 6. Line-by-Line Walkthrough
+| Line | What happens |
+|---|---|
+| `kthSmallestHelper(root, li);` | Fully populate `li` in sorted order via inorder traversal |
+| `return li.get(k - 1).data;` | Direct index lookup — no searching needed once the list is built |
+
+## 7. Dry Run — `kthSmallest(root, 2)`
+```text
+kthSmallestHelper builds li via inorder: visits 1, 3, 6, 8, 10, 14 in that order.
+li = [Node(1), Node(3), Node(6), Node(8), Node(10), Node(14)]
+li.get(2-1) = li.get(1) = Node(3)
+return 3
+```
+Result: **3** — the 2nd smallest value in the sorted sequence `1, 3, 6, 8, 10, 14`.
+
+## 8. Test Cases
+| Call | On tree | Result |
+|---|---|---|
+| `kthSmallest(root, 2)` | BST example | 3 |
+| `kthSmallest(root, 1)` | BST example | 1 (the smallest) |
+| `kthSmallest(root, 6)` | BST example | 14 (the largest, since there are exactly 6 nodes) |
+| `kthSmallest(root, 7)` | BST example (only 6 nodes exist) | **currently throws `IndexOutOfBoundsException`** — see bug above |
+| `kthSmallest(root, 0)` | BST example | **currently throws `IndexOutOfBoundsException`** (`k-1 = -1`) |
+
+## Better / Alternative Approach
+Add a bounds guard:
+```java
+if (k <= 0 || k > li.size()) { throw new IllegalArgumentException("k out of range"); }
+```
+Beyond that fix, the O(n) approach here is correct but not the most efficient possible: it always builds the **entire** inorder list even if `k` is small (e.g., `k=1` still does a full O(n) traversal). A genuinely better approach for a single query: do an inorder traversal that **stops early** the moment you've visited the `k`-th node (using a counter, no list at all) — O(k) time instead of O(n), and O(h) space instead of O(n) space for the list. If you needed to answer *many* kth-smallest queries against the same tree repeatedly, an even better approach augments each BST node with a count of nodes in its left subtree, enabling O(h) per query with no traversal at all.
+
+---
+
+# Problem 51 — Validate BST (Range-Bounding, Top-Down)
+
+## 1. What is the problem?
+LeetCode 98. Determine whether a given binary tree satisfies the BST property everywhere — not just locally between each node and its immediate children, but genuinely for *every* ancestor-descendant relationship in the tree.
+
+## 2. Example Tree
+The shared BST example (valid) — plus a specifically-constructed **invalid** example that demonstrates why this problem is trickier than it first looks:
+```text
+       10
+      /  \
+     5    15
+         /  \
+        6    20
+```
+This tree is **NOT** a valid BST, even though every node individually looks fine compared to its *immediate* parent (`6 < 15` looks OK locally) — the problem is that `6` sits in `10`'s right subtree, yet `6 < 10`, which violates the BST property globally. Catching this kind of violation is the entire point of Problems 51 and 52.
+
+## 3. My Code
+```java
+private static boolean validBST(Node root) {
+    if (root == null) {
+        return true;
+    }
+    return validBST(root, Integer.MIN_VALUE, Integer.MAX_VALUE);
+}
+
+private static boolean validBST(Node root, int minValue, int maxValue) {
+    if (root == null) {
+        return true;
+    }
+    if (root.data <= minValue || root.data >= maxValue) {
+        return false;
+    }
+    return validBST(root.left, minValue, root.data) && validBST(root.right, root.data, maxValue);
+}
+```
+
+## 4. Issues / Bugs / Edge Cases
+**A well-known LeetCode 98 gotcha, worth flagging even though it's unlikely to matter in practice:** the initial bounds use `Integer.MIN_VALUE` / `Integer.MAX_VALUE` as `int`. If the tree legitimately contained a node with the *exact* value `Integer.MIN_VALUE`, the check `root.data <= minValue` would trigger (`MIN_VALUE <= MIN_VALUE` is true) and incorrectly report the tree as invalid, even if it's actually a perfectly valid BST. The standard fix is to widen the bounds to `long` (`Long.MIN_VALUE` / `Long.MAX_VALUE`) so no legitimate `int` value can ever collide with the sentinel boundary.
+
+## 5. Intuition & Why Range-Bounding (Not Just Local Comparison)
+The naive approach — compare each node only to its immediate left/right children — is a well-known trap that silently accepts invalid trees like the counter-example above. The fix: pass down a **valid range** (`minValue`, `maxValue`) that gets progressively **tightened** as you descend. Every node must fall strictly inside the range handed to it by its ancestors — not just be consistent with its immediate parent. Going left tightens the *upper* bound to the current node's value (everything further left must be smaller than this node specifically, not just smaller than some ancestor). Going right tightens the *lower* bound the same way.
+
+## 6. Line-by-Line Walkthrough
+| Line | What happens |
+|---|---|
+| `if (root.data <= minValue \|\| root.data >= maxValue) return false;` | The actual constraint check — this node must respect **every** ancestor's bound, not just its direct parent's |
+| `validBST(root.left, minValue, root.data)` | Left subtree inherits the same lower bound, but the upper bound tightens to the current node's value |
+| `validBST(root.right, root.data, maxValue)` | Right subtree inherits the same upper bound, but the lower bound tightens |
+
+## 7. Dry Run — `validBST(root)` on the shared (valid) BST example
+```text
+validBST(8, -inf, +inf): 8 ok → check left(3,-inf,8) && right(10,8,+inf)
+  validBST(3, -inf, 8): 3 ok → check left(1,-inf,3) && right(6,3,8)
+    validBST(1,-inf,3): 1 ok → validBST(null,...)=true && validBST(null,...)=true → true
+    validBST(6,3,8): 6 ok (3<6<8) → true && true → true
+  → true
+  validBST(10,8,+inf): 10 ok → check left(null,8,10)=true && right(14,10,+inf)
+    validBST(14,10,+inf): 14 ok → true
+  → true
+→ true && true = true
+```
+Result: **true** — correctly valid.
+
+**Contrast — the invalid counter-example `10 / 5, (15 / 6, 20)`:**
+```text
+validBST(10,-inf,+inf): 10 ok → check left(5,-inf,10) && right(15,10,+inf)
+  validBST(5,-inf,10): 5 ok → true
+  validBST(15,10,+inf): 15 ok → check left(6,10,15) && right(20,15,+inf)
+    validBST(6,10,15): is 6 <= minValue(10)? YES → return false!
+  → false (short-circuits, right side never even needs checking)
+→ true && false = false
+```
+Result: **false** — correctly catches the violation, because `6` was checked against the bound `10` (inherited from the root), not just against its immediate parent `15`.
+
+## 8. Test Cases
+| Input | Output |
+|---|---|
+| Shared BST example | `true` |
+| `10 / 5, (15 / 6, 20)` (the counter-example above) | `false` |
+| Single node | `true` |
+| Empty tree | `true` |
+| Tree with a duplicate value anywhere (e.g., two nodes both `= 5`) | `false` (strict `<=`/`>=` checks correctly reject duplicates) |
+
+## Better / Alternative Approach
+This is already a correct, standard, optimal O(n) solution. See Problem 52 for a genuinely different technique (bottom-up min/max propagation) that solves the identical problem — worth comparing both directly, since they represent two fundamentally different strategies (top-down constraint-passing vs. bottom-up range-aggregation) for the same validation task.
+
+---
+
+# Problem 52 — Validate BST (Min/Max Propagation, Bottom-Up)
+
+## 1. What is the problem?
+The exact same validation goal as Problem 51, solved with a structurally different technique — single-pass, bottom-up, using the new `Info` helper class instead of passed-down bounds.
+
+## 2. Example Tree
+Same shared BST example and invalid counter-example as Problem 51.
+
+## 3. My Code
+```java
+private static boolean validBST2(Node root) {
+    if (root == null) {
+        return true;
+    }
+    return checkBST(root).isBST;
+}
+
+private static Info checkBST(Node root) {
+    if (root == null) {
+        return new Info(Integer.MAX_VALUE, Integer.MIN_VALUE, true);
+    }
+    Info left = checkBST(root.left);
+    Info right = checkBST(root.right);
+    if (!left.isBST || !right.isBST) {
+        return new Info(
+            Math.min(root.data, Math.min(left.min, right.min)),
+            Math.max(root.data, Math.max(left.max, right.max)),
+            false
+        );
+    }
+    if (left.max >= root.data || right.min <= root.data) {
+        return new Info(
+            Math.min(root.data, Math.min(left.min, right.min)),
+            Math.max(root.data, Math.max(left.max, right.max)),
+            false
+        );
+    }
+    int min = Math.min(root.data, Math.min(left.min, right.min));
+    int max = Math.max(root.data, Math.max(left.max, right.max));
+    return new Info(min, max, true);
+}
+```
+
+## 4. Issues / Bugs / Edge Cases
+None — correct, and genuinely more advanced than Problem 51's approach. The same `int`-vs-`long` boundary gotcha noted in Problem 51 technically applies here too, though it surfaces differently (via `Integer.MAX_VALUE`/`MIN_VALUE` as the "empty subtree" sentinel values rather than as explicit bounds).
+
+## 5. Intuition & Why Min/Max Propagation Works
+Instead of passing constraints **down** from ancestors, this approach computes, for every subtree, **three facts at once**: its minimum value, its maximum value, and whether it's internally a valid BST — then combines those facts going **up** the call stack. The clever base case: an empty subtree reports `min = Integer.MAX_VALUE` and `max = Integer.MIN_VALUE` — deliberately *inverted* sentinels, so that when a parent computes `Math.min(root.data, left.min)`, a missing (null) child can never accidentally "win" that minimum comparison, and symmetrically for max. This is the standard trick for this exact "combine children's aggregated facts" pattern.
+
+At every real node, the actual BST check is: **is this node's value greater than everything in its left subtree, AND less than everything in its right subtree?** — captured directly as `left.max >= root.data || right.min <= root.data` (a violation if either fails). This check alone is what correctly catches violations a naive "only check immediate children" approach would miss, because `left.max` and `right.min` reflect the **entire** subtree's extremes, not just the immediate child's own value.
+
+## 6. Line-by-Line Walkthrough
+| Line | What happens |
+|---|---|
+| base case: `Info(MAX_VALUE, MIN_VALUE, true)` | Empty subtree — inverted sentinels ensure it never wins a min/max comparison against a real value |
+| `left = checkBST(root.left); right = checkBST(root.right);` | Recursively validate and summarize both subtrees first |
+| `if (!left.isBST \|\| !right.isBST)` | Already broken somewhere below — propagate the failure upward (still computing min/max for consistency, but `isBST=false` is what actually matters from here on) |
+| `if (left.max >= root.data \|\| right.min <= root.data)` | **The real check** — does this node's value genuinely sit strictly between the true extremes of its entire left and right subtrees? |
+| final `return new Info(min, max, true);` | This subtree is valid — bundle its true min/max upward for its own parent to use |
+
+## 7. Dry Run — `checkBST(root).isBST` on the invalid counter-example `10 / 5, (15 / 6, 20)`
+```text
+checkBST(10):
+  left = checkBST(5): leaf. left=checkBST(null)=Info(MAX,MIN,true). right=checkBST(null)=Info(MAX,MIN,true).
+    left.isBST&&right.isBST → true. Check: left.max(MIN)>=5? no. right.min(MAX)<=5? no. → valid.
+    min=min(5,MAX,MAX)=5. max=max(5,MIN,MIN)=5. return Info(5,5,true).
+  right = checkBST(15):
+    left=checkBST(6): leaf → Info(6,6,true) (same reasoning as node 5 above)
+    right=checkBST(20): leaf → Info(20,20,true)
+    both isBST=true. Check: left.max(6)>=15? no. right.min(20)<=15? no. → valid AT NODE 15 (locally).
+    min=min(15,6,20)=6. max=max(15,6,20)=20. return Info(6,20,true).
+  Back at 10: left=Info(5,5,true), right=Info(6,20,true). Both isBST=true individually.
+  Check: left.max(5)>=10? no. right.min(6)<=10? YES → violation detected!
+  return Info(min(10,5,6)=5, max(10,5,20)=20, false)
+```
+Result: `checkBST(root).isBST` = **false** — correctly rejected, because `right.min` (the true minimum of the *entire* right subtree, which is `6`) was compared against `root.data` (`10`), catching the violation that a check comparing only `15` against its own immediate children would have completely missed.
+
+## 8. Test Cases
+| Input | Output |
+|---|---|
+| Shared BST example | `true` |
+| `10 / 5, (15 / 6, 20)` (the counter-example) | `false` |
+| Single node | `true` |
+| Empty tree | `true` |
+| Tree with a duplicate value | `false` |
+
+## Better / Alternative Approach
+Both this method and Problem 51 are correct, optimal O(n) single-pass solutions to the identical problem — genuinely just two different techniques worth having both in your toolkit. Problem 51's top-down range-passing is generally considered slightly easier to explain out loud in an interview; this bottom-up `Info`-propagation approach generalizes more naturally to problems where you need to know more than just "is it valid" — e.g., "what's the largest valid BST *subtree* within an otherwise-invalid tree" (LeetCode 333) is a direct extension of exactly this pattern.
+
+---
+
+# Problem 53 — Lowest Common Ancestor in a BST (Optimized)
+
+## 1. What is the problem?
+LeetCode 235. The BST-specific version of Problem 26's general-tree LCA — since a BST has ordering information available, the search can be made much faster than exploring both subtrees at every node.
+
+## 2. Example Tree
+The shared BST example, finding the LCA of `1` and `6`.
+
+**⚠️ Important: this is different from what your `main()` currently tests.** Your `main()`'s only active (uncommented) line is `LCAbst(root, new Node(2), new Node(3));` — but `root` there is still the *original* non-BST tree from the top of `main()` (`1, 2, 3, 4, 5, 6`, where `1`'s children are `2` and `3`). Since `LCAbst` assumes BST ordering to decide which way to recurse, running it against a tree that isn't actually a BST doesn't throw an error — it just silently walks to the wrong place and returns an incorrect answer. Both scenarios are traced below so you can see exactly what goes wrong.
+
+## 3. My Code
+```java
+private static Node LCAbst(Node root, Node p, Node q) {
+    if (root == null || root.data == p.data || root.data == q.data) {
+        return root;
+    }
+    if (root.data < p.data && root.data < q.data) {
+        return LCAbst(root.right, p, q);
+    }
+    if (root.data > p.data && root.data > q.data) {
+        return LCAbst(root.left, p, q);
+    }
+    return root;
+}
+```
+
+## 4. Issues / Bugs / Edge Cases
+No bug in the code itself — it's a correct, standard BST-LCA implementation. The issue is entirely in **how it's currently being called** (see the warning above): this method's correctness *depends on* being given an actual BST. Called against a non-BST tree, it produces a wrong answer with no indication anything went wrong — worth being very deliberate about which tree variable you pass to which method in this file, since several BST-specific methods (this one, plus Problems 41–52) all share the generic `Node`/`root` naming with the non-BST methods earlier in the file.
+
+## 5. Intuition & Why This Beats the General-Tree Version
+Problem 26's general-tree LCA has to explore **both** subtrees at every node, because a general binary tree carries no information about where a value might be. A BST changes this completely: at any node, you can compare `p` and `q`'s values against the current node's value and immediately know which single direction to go:
+- If **both** `p` and `q` are greater than the current node, the LCA must be somewhere in the **right** subtree — the left subtree can be discarded entirely.
+- If **both** are smaller, the LCA must be in the **left** subtree.
+- Otherwise — one is smaller-or-equal and the other is larger-or-equal, meaning their paths **split** at this exact node (or the current node *is* one of them) — this node is the LCA.
+
+This turns an O(n) worst-case general-tree search into an O(h) BST search, the same "eliminate half the tree at every step" idea that powers BST search, ceil, and floor throughout this file.
+
+## 6. Line-by-Line Walkthrough
+| Line | What happens |
+|---|---|
+| `root.data == p.data \|\| root.data == q.data` | Found one of the targets directly — it's allowed to be its own ancestor |
+| `root.data < p.data && root.data < q.data` | Both targets are bigger — discard the left subtree entirely, recurse right only |
+| `root.data > p.data && root.data > q.data` | Both targets are smaller — discard the right subtree entirely, recurse left only |
+| final `return root;` | Neither of the above — the paths to `p` and `q` diverge here, so this node is the LCA |
+
+## 7. Dry Run A — `LCAbst(root, Node(1), Node(6))` on the actual BST example (correct usage)
+```text
+LCAbst(8, 1, 6): 8==1? no. 8==6? no.
+  8<1 && 8<6? false (8 is not < 1)
+  8>1 && 8>6? 8>1 true, 8>6 true → BOTH true → recurse left: LCAbst(3, 1, 6)
+LCAbst(3, 1, 6): 3==1? no. 3==6? no.
+  3<1 && 3<6? false (3 is not < 1)
+  3>1 && 3>6? 3>1 true, 3>6 false → not both true → falls through
+  return root (node 3)
+```
+Result: node **3** — correct, since `1` and `6` are `3`'s direct left and right children, splitting exactly there.
+
+## 7b. Dry Run B — the same call, but against your `main()`'s actual (non-BST) tree
+Tree: `1` (root), left=`2`, right=`3`; `2`'s children are `4`,`5`; `3`'s left child is `6`. Calling `LCAbst(root=1, Node(2), Node(3))`:
+```text
+LCAbst(1, 2, 3): 1==2? no. 1==3? no.
+  1<2 && 1<3? 1<2 true, 1<3 true → BOTH true → recurse right: LCAbst(root.right=3, 2, 3)
+LCAbst(3, 2, 3): 3==2? no. 3==3? YES → return root (node 3)
+```
+Result: node **3**.
+
+**But the actual correct LCA of the nodes valued `2` and `3` in this tree is node `1`** (the root — `2` and `3` are literally siblings, both direct children of `1`), exactly as Problem 26's general-tree LCA method would correctly compute. `LCAbst` gets this wrong because it's navigating purely by **comparing values** as if the tree were ordered like a BST — but in this tree, `1 < 2` and `1 < 3` being true doesn't actually mean "both targets are in the right subtree" the way it would in a real BST; it's coincidental value comparison against a tree with no such ordering guarantee. This is exactly why the warning above matters: the method doesn't fail loudly, it just quietly gives you the wrong node.
+
+## 8. Test Cases
+| Call | Tree | p | q | Output | Correct? |
+|---|---|---|---|---|---|
+| `LCAbst(root, Node(1), Node(6))` | shared BST example | 1 | 6 | node 3 | ✅ yes — this is a real BST |
+| `LCAbst(root, Node(1), Node(14))` | shared BST example | 1 | 14 | node 8 (root) | ✅ yes |
+| `LCAbst(root, Node(8), Node(3))` | shared BST example | 8 | 3 | node 8 | ✅ yes (8 is an ancestor of 3, so 8 is its own LCA with 3) |
+| `LCAbst(root, Node(2), Node(3))` | **your `main()`'s original non-BST tree** | 2 | 3 | node 3 | ❌ **wrong** — correct answer is node 1, see Dry Run B above |
+
+## Better / Alternative Approach
+The method itself is already the standard, optimal O(h) solution *for an actual BST* — nothing to improve there. The real fix needed is at the **call site**: update `main()` to build (or point at) a genuine BST before calling `LCAbst`, or use Problem 26's general-tree `lowestCommonAncestors` instead if the tree in question isn't guaranteed to be a BST. As a defensive measure, some implementations add an assertion or a comment at the top of BST-specific methods like this one, explicitly noting the precondition — worth considering given how easy it is to accidentally pass the wrong tree in a file that has both BST and non-BST examples living side by side.
+
+---
+
+# Problem 54 — Construct BST from Preorder Traversal
+
+## 1. What is the problem?
+LeetCode 1008. Given only a preorder traversal array (guaranteed to come from a valid BST — no duplicates), rebuild the exact original tree. Unlike Problems 32/33, you get **just one** traversal array here — no inorder array to cross-reference — because a BST's ordering property makes the inorder sequence redundant information (it would just be the array sorted).
+
+## 2. Example
+`preorder = [8, 3, 1, 6, 10, 14]` — the preorder sequence of the shared BST example.
+
+## 3. My Code
+```java
+private static Node bstFromPreorder(int[] arr){ 
+    return bstFromPreorder(arr, Integer.MAX_VALUE, new int[] {0});
+}
+
+private static Node bstFromPreorder(int[] arr, int maxValue, int[] i) {
+    if (i[0] == arr.length || arr[i[0]] > maxValue) {
+        return null;
+    }
+    Node root = new Node(arr[i[0]]);
+    i[0]++;
+    root.left = bstFromPreorder(arr, root.data, i);
+    root.right = bstFromPreorder(arr, maxValue, i);
+    return root;
+}
+```
+
+## 4. Issues / Bugs / Edge Cases
+None — correct. Worth understanding the `int[] i = {0}` trick specifically: Java passes `int` by value, so a plain `int i` parameter couldn't be advanced by a recursive call and have that change visible to the caller. Wrapping it in a one-element array (`int[]`) is a common Java idiom that gives you a mutable "shared pointer" across recursive calls, since arrays are passed by reference.
+
+## 5. Intuition & Why This Approach
+Preorder always visits **root first**, so `arr[i[0]]` is always the next node to build. The clever part is the `maxValue` bound, which does double duty:
+- While building the **left** subtree, `maxValue` tightens to `root.data` — because everything in a BST's left subtree must be smaller than the root.
+- While building the **right** subtree, `maxValue` stays whatever it was inherited from above — because the right subtree only needs to respect the *original* ancestor bound, not be re-bounded by the current root on the low end.
+- **The key trick that needs no explicit lower bound:** by the time you start building the right subtree, the shared index `i[0]` has already consumed every value that belongs to the left subtree (they were all `<= root.data`, per BST ordering). So whatever the preorder array has *next* is guaranteed — by construction — to belong to the right subtree, as long as it's still `<= maxValue`. The moment a value exceeds `maxValue`, that signals "we've walked past the end of this subtree" and recursion should stop (`return null`) without consuming that value — it belongs to an ancestor's right subtree instead.
+
+## 6. Line-by-Line Walkthrough
+| Line | What happens |
+|---|---|
+| `if (i[0] == arr.length \|\| arr[i[0]] > maxValue) return null;` | Either the array is exhausted, or the next value is too big to belong here — in both cases, this subtree ends |
+| `Node root = new Node(arr[i[0]]); i[0]++;` | Consume the current value as this subtree's root, advance the shared pointer |
+| `root.left = bstFromPreorder(arr, root.data, i);` | Left subtree — bound tightens to the current root's value |
+| `root.right = bstFromPreorder(arr, maxValue, i);` | Right subtree — inherits the *same* bound this call received |
+
+## 7. Dry Run — `bstFromPreorder([8, 3, 1, 6, 10, 14])`
+```text
+call(maxValue=+inf, i=[0]): arr[0]=8, 8<=+inf → root=Node(8), i=[1]
+  root.left = call(maxValue=8, i=[1]): arr[1]=3, 3<=8 → root=Node(3), i=[2]
+    root.left = call(maxValue=3, i=[2]): arr[2]=1, 1<=3 → root=Node(1), i=[3]
+      root.left  = call(maxValue=1, i=[3]): arr[3]=6, 6>1 → return null
+      root.right = call(maxValue=3, i=[3]): arr[3]=6, 6>3 → return null
+      return Node(1)  [leaf]
+    root.right = call(maxValue=8, i=[3]): arr[3]=6, 6<=8 → root=Node(6), i=[4]
+      root.left  = call(maxValue=6, i=[4]): arr[4]=10, 10>6 → return null
+      root.right = call(maxValue=8, i=[4]): arr[4]=10, 10>8 → return null
+      return Node(6)  [leaf]
+    return Node(3) with left=1, right=6
+  root.right = call(maxValue=+inf, i=[4]): arr[4]=10, 10<=+inf → root=Node(10), i=[5]
+    root.left  = call(maxValue=10, i=[5]): arr[5]=14, 14>10 → return null
+    root.right = call(maxValue=+inf, i=[5]): arr[5]=14, 14<=+inf → root=Node(14), i=[6]
+      i[0]==arr.length(6) for both children → both null
+      return Node(14)  [leaf]
+    return Node(10) with left=null, right=14
+  return Node(8) with left=Node(3){1,6}, right=Node(10){null,14}
+```
+Result: exactly reconstructs the shared BST example — `8 / (3 / (1, 6), 10 / (null, 14))`.
+
+## 8. Test Cases
+| Input | Output |
+|---|---|
+| `[8, 3, 1, 6, 10, 14]` | the shared BST example, exactly |
+| `[5]` | single node `5` |
+| `[]` | `null` (empty tree — `i[0]==arr.length` immediately) |
+| `[1, 2, 3, 4]` (all increasing — every value is a right child) | a purely right-skewed chain `1→2→3→4` |
+| `[4, 3, 2, 1]` (all decreasing — every value is a left child) | a purely left-skewed chain `4←3←2←1` |
+
+## Better / Alternative Approach
+Already the standard, optimal O(n) solution (each array element is visited exactly once, thanks to the shared index — no repeated scanning). This is the expected approach for LeetCode 1008.
+
+---
+
+# Problem 55 — Inorder Successor in a BST
+
+## 1. What is the problem?
+LeetCode 285. Given a target value, find the node with the **next larger value** in the BST (the node that would come immediately after the target in an inorder traversal).
+
+## 2. Example
+The shared BST example, finding the successor of `6` (a value that actually exists in the tree) and of `2` (a value that doesn't).
+
+## 3. My Code
+```java
+private static Node inorderSuccessor(Node root, Node target) {
+    Node curr = root;
+    Node successor = null;
+    while (curr != null) {
+        if (curr.data > target.data) {
+            successor = curr;
+            curr = curr.left;
+        } else {
+            curr = curr.right;
+        }
+    }
+    return successor;
+}
+```
+
+## 4. Issues / Bugs / Edge Cases
+None — correct, including the case where `target`'s value actually exists as a node in the tree (see the dry run below — compare this against Problem 56, which gets the equivalent case wrong).
+
+## 5. Intuition & Why This Approach
+Walk down the tree comparing each node's value against the target: whenever `curr.data > target.data`, this node is a **valid candidate** for successor (record it) — but there might be an even smaller value that's still bigger than the target further down the **left** subtree, so keep going left to look for something closer. Whenever `curr.data <= target.data`, this node is too small (or is the target itself) — go right to look for something bigger. Using strict `>` here (not `>=`) is exactly what correctly excludes the target's own value from being considered its own successor.
+
+## 6. Line-by-Line Walkthrough
+| Line | What happens |
+|---|---|
+| `if (curr.data > target.data)` | Valid candidate — strictly bigger than target |
+| `successor = curr; curr = curr.left;` | Record it, then look left for something even closer |
+| `else { curr = curr.right; }` | Too small (or equal) — go right for something bigger |
+
+## 7. Dry Run — `inorderSuccessor(root, Node(6))` (target value exists in the tree)
+```text
+curr=8: 8>6 → successor=8, curr=curr.left=3
+curr=3: 3>6? no → curr=curr.right=6
+curr=6: 6>6? no (equal, not strictly greater) → curr=curr.right=null
+curr=null → loop ends
+return successor=8
+```
+Result: **8** — correctly the next value after `6` in sorted order `1,3,6,8,10,14`.
+
+**Contrast — `inorderSuccessor(root, Node(2))` (target doesn't exist in the tree):**
+```text
+curr=8: 8>2 → successor=8, curr=curr.left=3
+curr=3: 3>2 → successor=3, curr=curr.left=1
+curr=1: 1>2? no → curr=curr.right=null
+curr=null → return successor=3
+```
+Result: **3** — correctly the smallest value greater than `2`.
+
+## 8. Test Cases
+| Target | Output |
+|---|---|
+| `6` (exists in tree) | node `8` |
+| `2` (doesn't exist) | node `3` |
+| `14` (the largest value) | `null` (nothing is bigger) |
+| `0` (smaller than everything) | node `1` |
+
+## Better / Alternative Approach
+Already the standard, optimal O(h) iterative solution — this is the expected approach for LeetCode 285.
+
+---
+
+# Problem 56 — Inorder Predecessor in a BST ⚠️
+
+## 1. What is the problem?
+The mirror of Problem 55 — find the node with the **next smaller value** than the target.
+
+## 2. Example
+The shared BST example, finding the predecessor of `6` (exists in tree) and of `2` (doesn't exist) — chosen deliberately to expose a real bug.
+
+## 3. My Code
+```java
+private static Node inorderPredecessor(Node root, Node target) {
+    Node curr = root;
+    Node pre = null;
+    while (curr != null) {
+        if (curr.data > target.data) {
+            curr = curr.left;
+        } else {
+            pre = curr;
+            curr = curr.right;
+        }
+    }
+    return pre;
+}
+```
+
+## 4. Issues / Bugs / Edge Cases
+**Real bug, confirmed by dry run below:** the `else` branch triggers whenever `curr.data <= target.data` — which includes the case `curr.data == target.data`. That means if the target value actually exists as a node in the tree, this method records **the target's own node** as a candidate predecessor and then, finding nothing further right that's still `<=` target, ends up returning **the target itself** as its own predecessor — clearly wrong, since a predecessor must be strictly *less than* the target. Compare this directly against Problem 55's `inorderSuccessor`, which uses strict `>` for its recording condition and correctly avoids the equivalent trap. This bug never surfaces in the actual (commented-out) call in `main()` — `inorderPredecessor(root, new Node(2))` — purely by luck, since `2` doesn't exist as an actual node value in the tree.
+
+## 5. Intuition & Why This Approach (as intended)
+The *intended* logic mirrors Problem 55 exactly, flipped: whenever `curr.data` is strictly **less than** the target, it's a valid candidate (record it), then look **right** for something even closer (bigger, but still less than target). Whenever `curr.data` is **greater than or equal to** the target, go **left** instead (too big, or it's the target itself, which must be excluded from being its own predecessor).
+
+## 6. Line-by-Line Walkthrough (as currently written)
+| Line | What happens | Correct? |
+|---|---|---|
+| `if (curr.data > target.data) curr = curr.left;` | Too big — go left, don't record | ✅ correct |
+| `else { pre = curr; curr = curr.right; }` | Triggers for `curr.data <= target.data`, **including equality** | ❌ the equality case should NOT be recorded |
+
+## 7. Dry Run — `inorderPredecessor(root, Node(6))` (target exists in the tree — this is where it breaks)
+```text
+curr=8: 8>6 → curr=curr.left=3 (no record)
+curr=3: 3>6? no → pre=3, curr=curr.right=6
+curr=6: 6>6? no (equal falls into the else branch!) → pre=6 (overwrites the correct pre=3!), curr=curr.right=null
+curr=null → loop ends
+return pre=6
+```
+Result: **6** — **wrong**. The predecessor of `6` should be `3` (the largest value strictly less than `6` in `1,3,6,8,10,14`), but this returns `6` itself.
+
+**Contrast — `inorderPredecessor(root, Node(2))` (target doesn't exist — happens to work correctly):**
+```text
+curr=8: 8>2 → curr=curr.left=3
+curr=3: 3>2 → curr=curr.left=1
+curr=1: 1>2? no → pre=1, curr=curr.right=null
+curr=null → return pre=1
+```
+Result: **1** — correct, since `2` never exactly matches any node's value, the bug never gets triggered.
+
+## 8. Test Cases
+| Target | Output (current code) | Correct answer | Bug triggered? |
+|---|---|---|---|
+| `6` (exists in tree) | `6` | `3` | ❌ yes |
+| `8` (exists in tree) | `8` | `6` | ❌ yes |
+| `2` (doesn't exist) | `1` | `1` | ✅ no |
+| `9` (doesn't exist) | `8` | `8` | ✅ no |
+
+## Better / Alternative Approach
+Fix by excluding equality from the "record" branch — use `>=` for the "go left, don't record" condition instead of strict `>`:
+```java
+private static Node inorderPredecessor(Node root, Node target) {
+    Node curr = root;
+    Node pre = null;
+    while (curr != null) {
+        if (curr.data >= target.data) {
+            curr = curr.left;
+        } else {
+            pre = curr;
+            curr = curr.right;
+        }
+    }
+    return pre;
+}
+```
+Re-tracing `inorderPredecessor(root, Node(6))` with this fix: `curr=8: 8>=6→left=3. curr=3: 3>=6? no→pre=3,right=6. curr=6: 6>=6→left=null. return pre=3.` — correct.
+
+---
+
+# Problem 57 — BST Iterator (Controlled Ascending / Descending Traversal) ⚠️
+
+## 1. What is the problem?
+LeetCode 173-style — build a stateful iterator object over a BST that yields values one at a time via repeated `next()` calls, using O(h) space (not O(n)) by never materializing the full traversal upfront. Your version is generalized to support **both** directions (smallest-to-largest, or largest-to-smallest) via a single `isReverse` flag — this is what powers Problem 58's two-pointer technique.
+
+## 2. Example
+The shared BST example, constructing the iterator both ways.
+
+## 3. My Code
+```java
+class BSTIterator {
+    private Stack<Node> st = new Stack<>();
+    boolean isReverse;
+
+    public BSTIterator(Node root, boolean isReverse) {
+        this.isReverse = isReverse;
+        pushAll(root);
+    }
+
+    private void pushAll(Node root) {
+        Node curr = root;
+        while (curr != null) {
+            st.push(curr);
+            if (isReverse) {
+                curr = curr.left;
+            } else {
+                curr = curr.right;
+            }
+        }
+    }
+
+    public int next() {
+        Node temp = st.pop();
+        if (isReverse) {
+            pushAll(temp.right);
+        } else {
+            pushAll(temp.left);
+        }
+        return temp.data;
+    }
+
+    public boolean hasNext() {
+        return st.isEmpty();
+    }
+}
+```
+
+## 4. Issues / Bugs / Edge Cases — two real bugs here
+
+**Bug 1 — `hasNext()` is inverted.** It returns `st.isEmpty()`, which is `true` when there's **nothing left**, and `false` when there **is** more to iterate — exactly backwards from what the name and every conventional Java iterator promises. A standard `while (iterator.hasNext())` loop using this class would never execute even once on a freshly-built iterator with data in it, since `hasNext()` would immediately report `false`. The fix is simply `return !st.isEmpty();`.
+
+**Bug 2 — the `isReverse` flag's actual behavior is the opposite of its name.** Tracing through `pushAll` and `next()` (see the dry run below) reveals that `isReverse = false` actually produces **descending** order, and `isReverse = true` actually produces **ascending** order — precisely inverted from what any caller would reasonably assume given the name. This isn't just a cosmetic/naming issue: it's what breaks Problem 58 completely (see that entry for the full consequence).
+
+Neither bug crashes anything — both fail silently, which is exactly what makes them dangerous.
+
+## 5. Intuition & Why This Approach (and how the bugs happen)
+The core technique is the same "push a path down, and when you pop a node, push its unexplored side" pattern from iterative inorder traversal (the original Trees handbook, Problem 4) — just wrapped in a resumable object instead of a single self-contained loop. For a genuinely **ascending** iterator: the constructor should push root, then keep going **left** (so the smallest reachable value ends up on top of the stack, ready to be the first result); after popping a node, `next()` should push its **right** subtree next (the standard "now explore what comes after this node" step in inorder logic).
+
+**Here's exactly where the flag gets flipped:** the code writes `if (isReverse) { curr = curr.left; }` in `pushAll` — meaning `isReverse = true` is the branch that goes left first (which is actually the *ascending* behavior described above), while `isReverse = false` goes right first (which is actually *descending* behavior). The two methods (`pushAll` and `next()`) are internally *consistent* with each other under this same (inverted) sense of the flag — so the class isn't randomly broken, it's just **completely mislabeled**.
+
+## 6. Line-by-Line Walkthrough
+| Line | What happens |
+|---|---|
+| constructor `pushAll(root)` | Builds the initial stack — which direction depends on the (mislabeled) flag |
+| `while (isReverse) curr = curr.left else curr = curr.right` | The actual direction-determining logic — see bug 2 |
+| `next()`: `pop`, then `pushAll` the popped node's *other* side | Standard resumable-inorder continuation — correctly paired with whichever direction `pushAll` used |
+| `hasNext()`: `return st.isEmpty();` | See bug 1 — backwards |
+
+## 7. Dry Run — both constructions on the shared BST example
+**`new BSTIterator(root, false)`** (the flag says "not reversed," i.e. you'd expect ascending):
+```text
+Constructor pushAll(8), isReverse=false → goes RIGHT each time: push 8, curr=10; push 10, curr=14; push 14, curr=null.
+Stack (bottom→top): [8, 10, 14]
+
+next(): pop 14. isReverse=false → pushAll(14.left=null) → nothing pushed. return 14.
+next(): pop 10. pushAll(10.left=null) → nothing. return 10.
+next(): pop 8. pushAll(8.left=3): push 3, curr=6 (right); push 6, curr=null. Stack becomes [3, 6].
+        return 8.
+next(): pop 6. pushAll(6.left=null) → nothing. return 6.
+next(): pop 3. pushAll(3.left=1): push 1, curr=null. Stack becomes [1].
+        return 3.
+next(): pop 1. return 1.
+```
+Sequence produced: **14, 10, 8, 6, 3, 1** — this is **descending** order, despite `isReverse = false`.
+
+**`new BSTIterator(root, true)`** (the flag says "reversed," i.e. you'd expect descending):
+```text
+Constructor pushAll(8), isReverse=true → goes LEFT each time: push 8, curr=3; push 3, curr=1; push 1, curr=null.
+Stack: [8, 3, 1]
+
+next(): pop 1. pushAll(1.right=null) → nothing. return 1.
+next(): pop 3. pushAll(3.right=6): push 6, curr=null. return 3.
+next(): pop 6. pushAll(6.right=null) → nothing. return 6.
+next(): pop 8. pushAll(8.right=10): push 10, curr=null. return 8.
+next(): pop 10. pushAll(10.right=14): push 14, curr=null. return 10.
+next(): pop 14. return 14.
+```
+Sequence produced: **1, 3, 6, 8, 10, 14** — this is **ascending** order, despite `isReverse = true`.
+
+Confirmed: the flag's real-world meaning is the exact opposite of its name.
+
+## 8. Test Cases
+| Construction | Actual output sequence | What the name implies it should produce |
+|---|---|---|
+| `new BSTIterator(root, false)` | 14, 10, 8, 6, 3, 1 (descending) | ascending |
+| `new BSTIterator(root, true)` | 1, 3, 6, 8, 10, 14 (ascending) | descending |
+| `iterator.hasNext()` on a freshly-built, non-empty iterator | `false` | `true` |
+| `iterator.hasNext()` after fully draining all values | `true` | `false` |
+
+## Better / Alternative Approach
+Two independent one-line fixes, both worth making:
+```java
+public boolean hasNext() {
+    return !st.isEmpty();   // fixed: negate it
+}
+```
+```java
+// swap the direction inside pushAll so the flag means what it says:
+if (isReverse) { curr = curr.right; } else { curr = curr.left; }
+// and correspondingly in next():
+if (isReverse) { pushAll(temp.left); } else { pushAll(temp.right); }
+```
+With both fixes applied, `isReverse = false` correctly gives ascending order and `isReverse = true` correctly gives descending order — and, critically, Problem 58's `twoSumFindTarget` would then work correctly *without needing any changes of its own*, since it already calls this class with the (originally-intended) correct semantics in mind.
+
+---
+
+# Problem 58 — Two Sum IV: Input is a BST ⚠️ (currently always returns `false`)
+
+## 1. What is the problem?
+LeetCode 653. Given a BST and a target sum `k`, determine whether any two **distinct** node values sum to exactly `k`.
+
+## 2. Example
+The shared BST example (`1, 3, 6, 8, 10, 14`), target `k = 4`. Note: `1 + 3 = 4`, so the correct answer is `true`.
+
+## 3. My Code
+```java
+private static boolean twoSumFindTarget(Node root, int k) {
+    if (root == null) {
+        return false;
+    }
+    BSTIterator l = new BSTIterator(root, false); // left pointer
+    BSTIterator r = new BSTIterator(root, true);  // right pointer
+
+    int i = l.next();
+    int j = r.next();
+    while (i < j) {
+        if (i + j < k) {
+            i = l.next();
+        } else if (i + j > k) {
+            j = r.next();
+        } else if (i + j == k) {
+            return true;
+        }
+    }
+    return false;
+}
+```
+
+## 4. Issues / Bugs / Edge Cases
+**This method is currently completely broken — it will return `false` for every input, regardless of whether a valid pair actually exists.** This isn't a new bug of its own; it's the direct, cascading consequence of Problem 57's flag-inversion bug. The comments reveal the clear intent: `l` (constructed with `isReverse=false`) is meant to be the ascending "left pointer" (starts at the smallest value), and `r` (constructed with `isReverse=true`) is meant to be the descending "right pointer" (starts at the largest value) — the classic two-pointer-on-sorted-data setup. But because `BSTIterator`'s flag is inverted, `l` actually produces **descending** values and `r` actually produces **ascending** values — exactly swapped from what this method assumes.
+
+## 5. Intuition & Why This Approach (as intended) — and exactly how it breaks
+The intended algorithm is the classic **two-pointer technique** applied to a BST treated as an implicit sorted sequence (via the two iterators, standing in for "start of the sorted array" and "end of the sorted array" without materializing the array): start `i` at the smallest value and `j` at the largest. If `i + j` is too small, the only way to increase it is to advance `i` forward (next smallest). If `i + j` is too big, advance `j` backward (next largest-but-smaller). If they ever match `k`, done. The loop naturally terminates when the two pointers cross (`i >= j`).
+
+**Exactly how the bug breaks this:** because `l` is actually descending, `i = l.next()` returns the **largest** value first (`14` in the shared example) instead of the smallest. Because `r` is actually ascending, `j = r.next()` returns the **smallest** value first (`1`) instead of the largest. So the very first loop condition check is `while (i < j)` → `while (14 < 1)` → **false immediately** — the loop body never runs even once, and the function falls straight through to `return false`, no matter what `k` is or what pairs might actually exist in the tree.
+
+## 6. Line-by-Line Walkthrough (showing where it goes wrong)
+| Line | Intended behavior | Actual behavior (given Problem 57's bug) |
+|---|---|---|
+| `BSTIterator l = new BSTIterator(root, false);` | ascending iterator | **descending** iterator |
+| `BSTIterator r = new BSTIterator(root, true);` | descending iterator | **ascending** iterator |
+| `int i = l.next();` | smallest value | **largest** value |
+| `int j = r.next();` | largest value | **smallest** value |
+| `while (i < j)` | true initially (small < large) | **false immediately** (large is not < small) |
+
+## 7. Dry Run — `twoSumFindTarget(root, 4)` as currently written
+```text
+l = BSTIterator(root, false)  → actually descending
+r = BSTIterator(root, true)   → actually ascending
+i = l.next() = 14   (l's first value, descending order starts at the max)
+j = r.next() = 1    (r's first value, ascending order starts at the min)
+while (14 < 1): false → loop never runs
+return false
+```
+Result: **false** — **wrong**. `1 + 3 = 4` is a genuine valid pair sitting right there in the tree, but the method never even gets a chance to check it.
+
+**Contrast — the same call, with Problem 57's bugs fixed (`isReverse` meaning corrected):**
+```text
+l = ascending iterator → i = l.next() = 1
+r = descending iterator → j = r.next() = 14
+while (1 < 14):
+  i+j = 15 > 4 → j = r.next() = 10
+while (1 < 10):
+  i+j = 11 > 4 → j = r.next() = 8
+while (1 < 8):
+  i+j = 9 > 4 → j = r.next() = 6
+while (1 < 6):
+  i+j = 7 > 4 → j = r.next() = 3
+while (1 < 3):
+  i+j = 4 == 4 → return true
+```
+Result (with the fix): **true** — correct.
+
+## 8. Test Cases
+| k | Current output | Correct output (once Problem 57 is fixed) |
+|---|---|---|
+| 4 (1+3 exists) | `false` | `true` |
+| 18 (8+10 exists) | `false` | `true` |
+| 100 (no pair sums to this) | `false` | `false` (correctly, but for the wrong reason currently) |
+| Single-node tree, any k | `false` | `false` (correctly — no distinct pair possible with one node) |
+
+## Better / Alternative Approach
+No changes are needed in this method itself — fixing `BSTIterator` (Problem 57) resolves this completely, since the algorithm's own two-pointer logic is already correct. This is a good example of why bugs in a shared utility class can silently propagate: this method's logic was never actually wrong, but it was built on a foundation that was.
+
+---
+
+# Problem 59 — Recover Binary Search Tree
+
+## 1. What is the problem?
+LeetCode 99. Exactly two nodes in a BST have had their **values** accidentally swapped (the tree's shape/structure is untouched — only two values are in the wrong spots). Find and fix them, restoring correct BST ordering, ideally in O(1) extra space beyond the recursion itself.
+
+## 2. Example
+Two custom examples, since this problem's whole point only shows up with an intentionally-corrupted tree:
+- **Adjacent swap:** the shared BST with `3` and `6` swapped → `8 / (6 / (1, 3), 10 / (null, 14))`
+- **Non-adjacent swap:** the shared BST with `3` and `10` swapped → `8 / (10 / (1, 6), 3 / (null, 14))`
+
+## 3. My Code
+```java
+Node curr = null;
+Node pre = null;
+Node first = null;
+Node mid = null;
+Node second = null;
+
+public void recoverBST(Node root) {
+    inorderRecoverBST(root);
+    if (second != null) {
+        int temp = first.data;
+        first.data = second.data;
+        second.data = temp;
+    } else {
+        int temp = first.data;
+        first.data = mid.data;
+        mid.data = temp;
+    }
+}
+
+public void inorderRecoverBST(Node root) {
+    if (root == null) {
+        return;
+    }
+    inorderRecoverBST(root.left);
+    curr = root;
+    if (pre != null) {
+        if (pre.data > curr.data) {
+            if (first == null) {
+                first = pre;
+                mid = curr;
+            } else {
+                second = curr;
+            }
+        }
+    }
+    pre = curr;
+    inorderRecoverBST(root.right);
+}
+```
+
+## 4. Issues / Bugs / Edge Cases
+None — correct, standard implementation of the classic technique. Like `diameterOfTree` (Problem 13) and `CeilBSTrecursive` Version B (Problem 45), this relies on **instance fields** (`curr`, `pre`, `first`, `mid`, `second`) rather than parameters — meaning a fresh object (or a manual reset of all five fields) is required before each independent call, or leftover state from a previous call will corrupt the next one.
+
+## 5. Intuition & Why "First Violation" and "Second Violation" Are Tracked Separately
+A correct BST's inorder traversal is always strictly ascending. If exactly two values got swapped, the inorder sequence will show either **one** "drop" (if the swapped values were adjacent in sorted order) or **two** separate "drops" (if they weren't adjacent — swapping two distant values breaks ordering at two different points: once where the smaller value now sits too early, and once where the larger value now sits too late).
+
+The algorithm walks the tree inorder, comparing each consecutive pair (`pre`, `curr`):
+- **First time** `pre.data > curr.data` is found: `first = pre` (the too-large value, appearing too early) and `mid = curr` (the too-small value right after it — this is a *guess* that gets discarded if a second violation shows up).
+- **If a second violation happens**, that confirms the swap was non-adjacent: `second = curr` becomes the true second half of the swapped pair (replacing the tentative guess `mid`), and `first` (from the first violation) remains correct as-is.
+
+Finally: if `second` was ever set, swap `first` and `second` directly. Otherwise (only one violation was ever found — the adjacent case), swap `first` and `mid`.
+
+## 6. Line-by-Line Walkthrough
+| Line | What happens |
+|---|---|
+| `inorderRecoverBST(root.left);` | Standard inorder recursion — process everything smaller first |
+| `if (pre != null && pre.data > curr.data)` | A violation — inorder ordering was broken between these two consecutive nodes |
+| `if (first == null) { first = pre; mid = curr; }` | First violation — tentatively guess an adjacent swap |
+| `else { second = curr; }` | A second violation happened — confirms non-adjacent, `mid`'s guess gets superseded |
+| `pre = curr;` | Always advance, regardless of whether a violation was found this step |
+| `if (second != null)` (in `recoverBST`) | Two violations found → swap the two confirmed nodes directly |
+| `else` | Only one violation found → swap `first` and `mid` |
+
+## 7. Dry Run A — Adjacent swap: `8 / (6 / (1, 3), 10 / (null, 14))` (originally `3` and `6` swapped)
+```text
+Inorder sequence visited: 1, 6, 3, 8, 10, 14
+Compare consecutive pairs:
+  pre=null,curr=1: pre is null, skip check. pre=1.
+  pre=1,curr=6: 1>6? no. pre=6.
+  pre=6,curr=3: 6>3? YES → first violation. first=null so far → first=6(node), mid=3(node). pre=3.
+  pre=3,curr=8: 3>8? no. pre=8.
+  pre=8,curr=10: no. pre=10.
+  pre=10,curr=14: no. pre=14.
+Only one violation total → second stays null.
+recoverBST: second==null → swap first.data(6) and mid.data(3).
+  first.data becomes 3, mid.data becomes 6.
+```
+Result: the node that erroneously held `6` is corrected back to `3`, and the node that erroneously held `3` is corrected back to `6` — tree fully restored to the original shared BST example.
+
+## 7b. Dry Run B — Non-adjacent swap: `8 / (10 / (1, 6), 3 / (null, 14))` (originally `3` and `10` swapped)
+```text
+Inorder sequence visited: 1, 10, 6, 8, 3, 14
+Compare consecutive pairs:
+  pre=null,curr=1: skip. pre=1.
+  pre=1,curr=10: 1>10? no. pre=10.
+  pre=10,curr=6: 10>6? YES → first violation. first=10(node), mid=6(node). pre=6.
+  pre=6,curr=8: 6>8? no. pre=8.
+  pre=8,curr=3: 8>3? YES → SECOND violation. first is already set → second=3(node). pre=3.
+  pre=3,curr=14: 3>14? no. pre=14.
+Two violations found → second is not null.
+recoverBST: swap first.data(10) and second.data(3).
+  first.data becomes 3, second.data becomes 10.
+```
+Result: the node holding `10` (which was originally `3`'s position) gets corrected to `3`, and the node holding `3` (originally `10`'s position) gets corrected to `10` — tree fully restored, exactly matching the original shared BST example. Note `mid` (the node holding `6`) was never touched — it was only ever a placeholder guess for the adjacent case.
+
+## 8. Test Cases
+| Corrupted input | Detected `first` / `mid` / `second` | Result after `recoverBST` |
+|---|---|---|
+| `3` and `6` swapped (adjacent) | first=6, mid=3, second=null | fully restored original tree |
+| `3` and `10` swapped (non-adjacent) | first=10, mid=6, second=3 | fully restored original tree |
+| Root and a leaf swapped | depends on position, but always correctly detected via one or two violations | fully restored |
+| Already-valid BST (no swap) | `first` stays `null` — calling `recoverBST` on an untouched valid tree would actually throw a `NullPointerException` on `first.data`, since the method assumes exactly two nodes are swapped, per the problem's guarantee | (not a valid input per the problem's own constraints) |
+
+## Better / Alternative Approach
+This is already the standard, optimal O(n) time / O(h) space (via recursion) solution — the exact accepted technique for LeetCode 99. A true O(1)-space version exists using **Morris inorder traversal** (the same threading technique from the original Trees handbook, Problem 36) instead of recursion, avoiding the O(h) call stack entirely — worth knowing as the "even more optimal" follow-up if an interviewer asks for constant space.
+
+---
+
+# Problem 60 — Largest BST Subtree
+
+## 1. What is the problem?
+LeetCode 333. Given a binary tree that might **not** be a valid BST overall, find the size (node count) of the **largest subtree** within it that *is* a valid BST.
+
+## 2. Example
+A custom tree with an embedded valid BST inside an otherwise-invalid structure:
+```text
+        10
+       /  \
+      5    15
+     / \     \
+    1   8     7
+```
+The left subtree (`5` with children `1`, `8`) is a valid 3-node BST. The right side (`15` with right child `7`) is **not** valid, since `7 < 15` can't legally sit in `15`'s right subtree. The whole tree, taken together, also isn't a valid BST. The correct answer here is `3`.
+
+## 3. My Code
+```java
+class LargestBST {
+    int size;
+    int min;
+    int max;
+    LargestBST(int size, int max, int min) {
+        this.size = size;
+        this.max = max;
+        this.min = min;
+    }
+}
+
+private static int largestBST(Node root) {
+    LargestBST ans = helper(root, new LargestBST(0, Integer.MIN_VALUE, Integer.MAX_VALUE));
+    return ans.size;
+}
+
+private static LargestBST helper(Node root, LargestBST largestBST) {
+    if (root == null) {
+        return new LargestBST(0, Integer.MIN_VALUE, Integer.MAX_VALUE);
+    }
+    if (root.left == null && root.right == null) {
+        return new LargestBST(1, root.data, root.data);
+    }
+    LargestBST l = helper(root.left, largestBST);
+    LargestBST r = helper(root.right, largestBST);
+    if (l.max < root.data && root.data < r.min) {
+        return new LargestBST(l.size + r.size + 1,
+            Math.max(Math.max(l.max, r.max), root.data),
+            Math.min(Math.min(l.min, r.min), root.data));
+    }
+    return new LargestBST(Math.max(l.size, r.size), Integer.MAX_VALUE, Integer.MIN_VALUE);
+}
+```
+
+## 4. Issues / Bugs / Edge Cases
+No functional bug — this is correct (verified in detail below). Two things worth knowing, not because they're wrong, but because they're easy to misread:
+- **The `helper` method's second parameter (`largestBST`) is never actually used anywhere inside the method body.** It's dead/vestigial — every `LargestBST` object used inside `helper` is freshly constructed via `new LargestBST(...)`, never read from the passed-in parameter. Harmless, but worth knowing it can be deleted from the method signature entirely with zero behavior change.
+- **The constructor's parameter order is `(size, max, min)`** — note `max` comes before `min`, which is easy to misread as `(size, min, max)` at a glance. Every call site in this file gets the order right, but it's worth double-checking carefully if you ever add a new call.
+
+## 5. Intuition & Why the "Poison Values" Trick Works
+This extends the exact same bottom-up min/max-propagation idea from `checkBST`/`Info` (Problem 52), but now also tracking **size**, since the goal isn't just "is this a valid BST" but "how big is the largest valid BST anywhere in this structure."
+
+The clever part is what gets returned when a subtree turns out **not** to be a valid BST: instead of returning `false` and stopping (like `checkBST` does), `helper` still returns a `LargestBST` object — with `size = Math.max(l.size, r.size)` (correctly carrying forward the best valid-BST size found *anywhere* further down, even through an invalid ancestor), but with `max = Integer.MAX_VALUE` and `min = Integer.MIN_VALUE` — deliberately extreme, "poisoned" sentinel values. These poisoned bounds guarantee that **no ancestor above this point can ever successfully merge this subtree into a larger valid BST** (since `MAX_VALUE` can never be `< ` any finite value, and no finite value can ever be `< MIN_VALUE`) — exactly the correct behavior, since an already-broken subtree can never be part of a valid larger one. Meanwhile, the `size` value keeps propagating upward unaffected by the poisoning, so the best answer found anywhere is never lost.
+
+## 6. Line-by-Line Walkthrough
+| Line | What happens |
+|---|---|
+| null base case: `LargestBST(0, MIN_VALUE, MAX_VALUE)` | Same inverted-sentinel trick as `Info` — an empty subtree can never accidentally win a min/max comparison |
+| leaf base case: `LargestBST(1, root.data, root.data)` | A single node is trivially a valid BST of size 1 |
+| `if (l.max < root.data && root.data < r.min)` | The actual BST-validity check — does the current root fit strictly between the true extremes of its left and right subtrees? |
+| valid case: `size = l.size + r.size + 1` | Both children are valid BSTs that fit together correctly — combine them plus the current node |
+| invalid case: `size = Math.max(l.size, r.size)` | Can't combine — but propagate whichever child had the better answer, poisoning the bounds so this broken piece can't be used by an ancestor |
+
+## 7. Dry Run — `largestBST(root)` on the custom example tree
+```text
+helper(10):
+  l = helper(5):
+    l2 = helper(1) = LargestBST(1, 1, 1)   [leaf]
+    r2 = helper(8) = LargestBST(1, 8, 8)   [leaf]
+    check: l2.max(1) < 5 && 5 < r2.min(8)? 1<5 true, 5<8 true → VALID merge
+    return LargestBST(1+1+1=3, max(1,8,5)=8, min(1,8,5)=1)
+  l = LargestBST(size=3, max=8, min=1)
+
+  r = helper(15):
+    l3 = helper(15.left=null) = LargestBST(0, MIN_VALUE, MAX_VALUE)
+    r3 = helper(7) = LargestBST(1, 7, 7)   [leaf]
+    check: l3.max(MIN_VALUE) < 15 && 15 < r3.min(7)? first true, but 15<7 FALSE → INVALID
+    return LargestBST(max(0,1)=1, MAX_VALUE, MIN_VALUE)   [poisoned]
+  r = LargestBST(size=1, max=MAX_VALUE, min=MIN_VALUE)   [poisoned]
+
+  Back at root=10: check l.max(8) < 10 && 10 < r.min(MIN_VALUE)?
+    8<10 true, but 10 < MIN_VALUE? FALSE → INVALID (as expected — r was already poisoned)
+  return LargestBST(max(l.size=3, r.size=1)=3, MAX_VALUE, MIN_VALUE)   [poisoned]
+
+largestBST(root) returns ans.size = 3
+```
+Result: **3** — correctly identifies the `{5, 1, 8}` subtree as the largest valid BST, even though it had to "see through" the invalid right side of the tree to find it.
+
+## 8. Test Cases
+| Input | Output |
+|---|---|
+| Custom example above | 3 |
+| The shared BST example (entirely valid) | 6 (the whole tree) |
+| A tree that's entirely invalid everywhere (no two adjacent nodes satisfy BST ordering) | 1 (every single node, in isolation, is trivially a valid "BST" of size 1) |
+| Single node | 1 |
+| Empty tree | 0 |
+
+## Better / Alternative Approach
+This is already the standard, optimal single-pass O(n) solution for LeetCode 333 — genuinely the same core technique as `checkBST` (Problem 52), extended to also carry a size. No meaningful improvement exists beyond removing the two harmless-but-confusing details noted above (the unused parameter, and the easy-to-misread constructor argument order) for clarity's sake.
+
+---
+
 ## 📎 Appendix — Full Method-to-LeetCode/GFG Cross-Reference
 
 | # | Method | Reference |
@@ -3358,7 +4749,22 @@ This keeps the side-effect style but removes the cross-call contamination risk.
 | 43 | CeilBST | GFG |
 | 44 | CeilBSTrecursive (A) | GFG |
 | 45 | CeilBSTrecursive (B) | GFG |
+| 46 | floorBSTiterative | GFG |
+| 47 | floorBSTRecursive | GFG |
+| 48 | insertGivenNodeInBST | LC 701 |
+| 49 | deleteTheKey | LC 450 |
+| 50 | kthSmallest | LC 230 |
+| 51 | validBST | LC 98 |
+| 52 | checkBST / validBST2 | LC 98 (alt. technique) |
+| 53 | LCAbst | LC 235 |
+| 54 | bstFromPreorder | LC 1008 |
+| 55 | inorderSuccessor | LC 285 |
+| 56 | inorderPredecessor | GFG |
+| 57 | BSTIterator | LC 173 (generalized) |
+| 58 | twoSumFindTarget | LC 653 |
+| 59 | recoverBST | LC 99 |
+| 60 | largestBST | LC 333 |
 
 ---
 
-*End of handbook. 45 methods, every one with your original code preserved, a plain-language problem statement, intuition, a full dry run, and test cases. Revisit the Progression Index at the top to jump straight to whichever one you've forgotten.*
+*End of handbook. 60 methods, every one with your original code preserved, a plain-language problem statement, intuition, a full dry run, and test cases. Revisit the Progression Index at the top to jump straight to whichever one you've forgotten. Methods flagged ⚠️ in the index (Problems 53, 56, 57, 58) have real, verified bugs — worth reading those four closely, especially the 57→58 chain, since it's a good lesson in how a bug in a shared utility class can silently break something that otherwise looks completely correct.*
