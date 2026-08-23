@@ -109,7 +109,7 @@ class BSTIterator{
 				
 	}
 	public boolean hasNext() {
-		return st.isEmpty();
+		return !st.isEmpty();
 	}
 	
 }
