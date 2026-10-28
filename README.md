@@ -66,26 +66,81 @@ This repository contains clean, well-structured Java implementations of various 
 ## Binary Trees
 
 ### Traversals
-- Recursive Preorder
-- Recursive Inorder
-- Recursive Postorder
+- Recursive Preorder, Inorder & Postorder
 - Iterative Preorder
 - Iterative Inorder
-- Iterative Postorder (One Stack)
 - Iterative Postorder (Two Stacks)
-- Level Order Traversal
+- Iterative Postorder (One Stack)
+- Level Order Traversal (BFS)
+- Zigzag Level Order Traversal
+- Morris Inorder Traversal (O(1) space)
 
-### Binary Tree Problems
-- Left View
-- Bottom View
+### Tree Properties
+- Maximum Depth
+- Minimum Depth
+- Count Nodes
+- Same Tree
 - Symmetric Tree
+- Invert Binary Tree
+- Balanced Binary Tree
+- Diameter of Binary Tree
+- Path Sum
+- All Root-to-Leaf Paths
+- Maximum Path Sum
+- Children Sum Property
+
+### Views & Boundary
+- Left View
+- Right View
+- Top View
+- Bottom View
+- Vertical Order Traversal
+- Boundary Traversal (Anti-Clockwise)
+
+### Paths, Ancestors & Distance
 - Root to Node Path
 - Lowest Common Ancestor (LCA)
 - Maximum Width of Binary Tree
-- Children Sum Property
 - Nodes at Distance K
+- Burning Tree (Time to Burn the Entire Tree)
+- Count Nodes in a Complete Binary Tree (O(log²n))
 
-*(More tree problems coming soon.)*
+### Construction & Serialization
+- Build Tree from Preorder + Inorder
+- Build Tree from Postorder + Inorder
+- Serialize & Deserialize a Binary Tree
+
+### Flatten Binary Tree
+- Recursive (Bottom-Up Splice)
+- Reverse Preorder
+- Iterative using Stack
+- Morris-Style (O(1) space)
+
+## Binary Search Trees
+
+### Search & Bounds
+- Search in a BST (Recursive & Iterative)
+- Ceil in a BST (Recursive & Iterative)
+- Floor in a BST (Recursive & Iterative)
+- Inorder Successor
+- Inorder Predecessor
+
+### Insertion & Deletion
+- Insert into a BST
+- Delete a Node from a BST
+
+### Validation & Properties
+- Kth Smallest Element in a BST
+- Validate BST (Range-Bounding, Top-Down)
+- Validate BST (Min/Max Propagation, Bottom-Up)
+- Lowest Common Ancestor in a BST
+- Recover Binary Search Tree
+- Largest BST Subtree
+
+### Construction & Iterators
+- Construct BST from Preorder Traversal
+- BST Iterator (Ascending & Descending)
+- Two Sum IV — Input is a BST
 
 ## Binary Search
 - Basic Binary Search
@@ -118,7 +173,8 @@ This repository contains clean, well-structured Java implementations of various 
 - ✅ Linked List
 - ✅ Stack
 - ✅ Queue
-- 🚧 Binary Trees
+- ✅ Binary Trees
+- ✅ Binary Search Trees
 - ⏳ Binary Search
 - ⏳ Graphs
 - ⏳ Dynamic Programming
