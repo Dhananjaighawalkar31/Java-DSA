@@ -3,4 +3,4 @@
 ## Traversal Algorithms
 
 - [x] Breadth First Search (BFS)
-- [ ] Depth First Search (DFS)
+- [x] Depth First Search (DFS)
