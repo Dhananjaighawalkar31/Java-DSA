@@ -4,3 +4,4 @@
 
 - [x] Breadth First Search (BFS)
 - [x] Depth First Search (DFS)
+- [x] Number of Provinces (DFS)
