@@ -4,4 +4,6 @@
 
 - [x] Breadth First Search (BFS)
 - [x] Depth First Search (DFS)
+- [x] Iterative DFS using Stack
 - [x] Number of Provinces (DFS)
+- [x] Number of Islands (BFS - 8 Directions)
