@@ -12,8 +12,4 @@
 | 6 | Flood Fill | BFS | Replace the colour of all connected cells having the original colour. |
 | 7 | Flood Fill | DFS | Recursively visit and recolour connected cells. |
 | 8 | Rotten Oranges | Multi-Source BFS | Start from all rotten oranges simultaneously and track the minimum time to rot fresh oranges. |
-
----
-
-**Language:** Java  
-**Topics:** Graph Traversal, Connected Components, Grid BFS, Multi-Source BFS
+| 9 | Undirected Graph Cycle Detection | BFS | Detect a visited neighbour that is not the current node's parent. |
