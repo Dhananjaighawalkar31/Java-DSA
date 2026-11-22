@@ -13,3 +13,4 @@
 | 7 | Flood Fill | DFS | Recursively visit and recolour connected cells. |
 | 8 | Rotten Oranges | Multi-Source BFS | Start from all rotten oranges simultaneously and track the minimum time to rot fresh oranges. |
 | 9 | Undirected Graph Cycle Detection | BFS | Detect a visited neighbour that is not the current node's parent. |
+| 10 | Bipartite Graph | BFS (Two-Coloring) | Assign two alternating colors to adjacent vertices; a same-color conflict means the graph is not bipartite. |
