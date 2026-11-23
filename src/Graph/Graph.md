@@ -14,3 +14,4 @@
 | 8 | Rotten Oranges | Multi-Source BFS | Start from all rotten oranges simultaneously and track the minimum time to rot fresh oranges. |
 | 9 | Undirected Graph Cycle Detection | BFS | Detect a visited neighbour that is not the current node's parent. |
 | 10 | Bipartite Graph | BFS (Two-Coloring) | Assign two alternating colors to adjacent vertices; a same-color conflict means the graph is not bipartite. |
+| 11 | Distance of Nearest 1 in Grid | Multi-Source BFS | Start BFS from all cells containing 1 simultaneously to calculate the minimum distance to every other cell. |
